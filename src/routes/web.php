@@ -54,10 +54,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     
-    // 一時的なルート（後で実装）
-    Route::get('/attendance/list', function () {
-        return view('welcome');
-    })->name('attendance.list');
+    Route::get('/attendance/list', [AttendanceController::class, 'list'])->name('attendance.list');
+    
+    Route::get('/attendance/detail/{id}', [AttendanceController::class, 'show'])->name('attendance.show');
+    Route::post('/attendance/detail/{id}', [AttendanceController::class, 'update'])->name('attendance.update');
     
     Route::get('/stamp_correction_request/list', function () {
         return view('welcome');
