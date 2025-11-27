@@ -8,7 +8,6 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\VerificationCodeMail;
-use Carbon\Carbon;
 
 class VerificationController extends Controller
 {
@@ -38,18 +37,6 @@ class VerificationController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-
-        if (!$user->verification_code) {
-            return back()->withErrors(['verification_code' => '認証コードが見つかりません。再送信してください。']);
-        }
-
-        if ($user->verification_code !== $request->verification_code) {
-            return back()->withErrors(['verification_code' => '認証コードが一致しません。']);
-        }
-
-        if ($user->verification_code_expires_at && Carbon::now()->gt($user->verification_code_expires_at)) {
-            return back()->withErrors(['verification_code' => '認証コードの有効期限が切れています。再送信してください。']);
-        }
 
         $user->update([
             'email_verified_at' => now(),

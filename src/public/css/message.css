@@ -1,14 +1,25 @@
 /* メッセージ表示コンポーネント */
-.error_message {
+.error-message {
     color: #c00;
     font-size: 12px;
+    text-align: center;
 }
 
-.success_message {
+.success-message {
     background-color: #d1fae5;
     border: 1px solid #10b981;
-    border-radius: 4px;
-    padding: 15px;
-    margin-bottom: 20px;
+    padding: 5px;
     color: #065f46;
+    text-align: center;
+    animation: fadeOut 0.5s ease-out 3s forwards;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
 }
