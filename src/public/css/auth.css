@@ -4,33 +4,35 @@
 .auth-container {
     width: 100%;
     max-width: 500px;
+    padding: 40px;
+    margin: 0 auto;
 }
 
-.auth_title {
+.auth-title {
     text-align: center;
     font-size: 24px;
     font-weight: bold;
     margin-bottom: 30px;
 }
 
-.auth_message {
+.auth-message {
     text-align: center;
     margin-bottom: 30px;
     line-height: 1.6;
 }
 
-.auth_description {
+.auth-description {
     text-align: center;
     color: #666;
     margin-bottom: 30px;
 }
 
-.auth-panel__actions {
+.auth-actions {
     text-align: center;
     margin-bottom: 20px;
 }
 
-.auth_button {
+.auth-button {
     display: inline-block;
     background-color: #e5e7eb;
     color: #000;
@@ -41,42 +43,42 @@
     font-size: 16px;
 }
 
-.auth_button:hover {
+.auth-button:hover {
     background-color: #d1d5db;
 }
 
 /* 認証フォームコンポーネント */
-.auth_form {
+.auth-form {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
 /* フォームフィールドコンポーネント */
-.auth_field {
+.auth-field {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-.auth_label {
+.auth-label {
     font-size: 14px;
     font-weight: 500;
 }
 
-.auth_input {
+.auth-input {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 16px;
 }
 
-.auth_input:focus {
+.auth-input:focus {
     outline: none;
     border-color: #9333ea;
 }
 
-.auth_input--code {
+.auth-input--code {
     text-align: center;
     font-size: 24px;
     letter-spacing: 8px;
@@ -84,7 +86,7 @@
 }
 
 /* 送信ボタンコンポーネント */
-.auth_submit {
+.auth-submit {
     background-color: #000;
     color: #fff;
     padding: 12px;
@@ -96,27 +98,27 @@
     margin-top: 10px;
 }
 
-.auth_submit:hover {
+.auth-submit:hover {
     background-color: #333;
 }
 
 /* 認証リンクコンポーネント */
-.auth_link {
+.auth-link {
     text-align: center;
     margin-top: 20px;
 }
 
-.auth_link_text {
+.auth-link-text {
     color: #0066cc;
     text-decoration: none;
     font-size: 14px;
 }
 
-.auth_link_text:hover {
+.auth-link-text:hover {
     text-decoration: underline;
 }
 
-.auth_link_button {
+.auth-link-button {
     background: none;
     border: none;
     color: #0066cc;
@@ -126,6 +128,6 @@
     padding: 0;
 }
 
-.auth_link_button:hover {
+.auth-link-button:hover {
     text-decoration: underline;
 }
