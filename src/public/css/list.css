@@ -1,0 +1,93 @@
+/* 勤怠一覧画面スタイル */
+
+.list-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.list-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+
+.list-month-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 15px 20px;
+    background-color: #fff;
+    border-radius: 8px;
+}
+
+.list-month-link {
+    color: #666;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.list-month-link:hover {
+    text-decoration: underline;
+}
+
+.list-month-current {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.list-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.list-table th {
+    padding: 12px;
+    text-align: center;
+    color: #666;
+    border-bottom: 2px solid #ddd;
+}
+
+.list-table th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.list-table th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.list-table td {
+    padding: 12px;
+    color: #666;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
+
+.list-table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 8px;
+}
+
+.list-table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 8px;
+}
+
+.list-date {
+    font-weight: 500;
+    color: #666;
+}
+
+.list-detail-link {
+    color: #000;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.list-detail-link:hover {
+    text-decoration: underline;
+}
