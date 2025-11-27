@@ -19,12 +19,12 @@
 
         <div class="auth-field">
             <label for="verification_code" class="auth-label">認証コード</label>
-            <input 
-                type="text" 
-                id="verification_code" 
-                name="verification_code" 
-                value="{{ old('verification_code') }}" 
-                class="auth-input auth-input--code" 
+            <input
+                type="text"
+                id="verification_code"
+                name="verification_code"
+                value="{{ old('verification_code') }}"
+                class="auth-input auth-input--code"
                 placeholder="000000"
                 maxlength="6"
                 autofocus
