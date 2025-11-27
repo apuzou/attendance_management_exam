@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\AttendanceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,10 +21,17 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// ログインルート（Fortifyのルートを上書き）
+Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+    ->middleware(['guest'])
+    ->name('login');
+
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->middleware(['auth'])
+    ->name('logout');
+
 Route::middleware(['guest'])->group(function () {
-    Route::post('/login', [AuthenticatedSessionController::class, 'store'])
-        ->name('login');
+    Route::post('/register', [RegisteredUserController::class, 'store'])
+        ->name('register');
 });
 
 // メール認証関連
@@ -38,4 +47,19 @@ Route::middleware(['auth'])->group(function () {
     
     Route::post('/email/verification-notification', [VerificationController::class, 'resend'])
         ->name('verification.resend');
+});
+
+// 勤怠関連（一般ユーザー）
+Route::middleware(['auth'])->group(function () {
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+    
+    // 一時的なルート（後で実装）
+    Route::get('/attendance/list', function () {
+        return view('welcome');
+    })->name('attendance.list');
+    
+    Route::get('/stamp_correction_request/list', function () {
+        return view('welcome');
+    })->name('correction.index');
 });
