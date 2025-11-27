@@ -1,0 +1,14 @@
+/* メッセージ表示コンポーネント */
+.error_message {
+    color: #c00;
+    font-size: 12px;
+}
+
+.success_message {
+    background-color: #d1fae5;
+    border: 1px solid #10b981;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+    color: #065f46;
+}
