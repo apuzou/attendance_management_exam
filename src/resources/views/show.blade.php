@@ -37,17 +37,23 @@
                     <td class="show-value-cell">
                         <div class="show-time-field">
                             @if($canEdit)
-                                <input type="text" name="corrected_clock_in" value="{{ $attendance->clock_in ? date('H:i', strtotime($attendance->clock_in)) : '' }}" class="show-time-input" placeholder="09:00">
+                                <input type="text" name="corrected_clock_in" value="{{ old('corrected_clock_in', $attendance->clock_in ? date('H:i', strtotime($attendance->clock_in)) : '') }}" class="show-time-input @error('corrected_clock_in') show-input-error @enderror" placeholder="09:00">
                             @else
                                 <span class="show-time-value">{{ $attendance->clock_in ? date('H:i', strtotime($attendance->clock_in)) : '' }}</span>
                             @endif
                             <span class="show-time-separator">~</span>
                             @if($canEdit)
-                                <input type="text" name="corrected_clock_out" value="{{ $attendance->clock_out ? date('H:i', strtotime($attendance->clock_out)) : '' }}" class="show-time-input" placeholder="18:00">
+                                <input type="text" name="corrected_clock_out" value="{{ old('corrected_clock_out', $attendance->clock_out ? date('H:i', strtotime($attendance->clock_out)) : '') }}" class="show-time-input @error('corrected_clock_out') show-input-error @enderror" placeholder="18:00">
                             @else
                                 <span class="show-time-value">{{ $attendance->clock_out ? date('H:i', strtotime($attendance->clock_out)) : '' }}</span>
                             @endif
                         </div>
+                        @error('corrected_clock_in')
+                            <div class="show-field-error">{{ $message }}</div>
+                        @enderror
+                        @error('corrected_clock_out')
+                            <div class="show-field-error">{{ $message }}</div>
+                        @enderror
                     </td>
                 </tr>
                 @php
@@ -60,17 +66,26 @@
                             <div class="show-time-field">
                                 @if($canEdit)
                                     <input type="hidden" name="break_times[{{ $index }}][id]" value="{{ $breakTime->id }}">
-                                    <input type="text" name="break_times[{{ $index }}][break_start]" value="{{ $breakTime->break_start ? date('H:i', strtotime($breakTime->break_start)) : '' }}" class="show-time-input" placeholder="12:00">
+                                    <input type="text" name="break_times[{{ $index }}][break_start]" value="{{ old("break_times.{$index}.break_start", $breakTime->break_start ? date('H:i', strtotime($breakTime->break_start)) : '') }}" class="show-time-input @error("break_times.{$index}.break_start") show-input-error @enderror" placeholder="12:00">
                                 @else
                                     <span class="show-time-value">{{ $breakTime->break_start ? date('H:i', strtotime($breakTime->break_start)) : '' }}</span>
                                 @endif
                                 <span class="show-time-separator">~</span>
                                 @if($canEdit)
-                                    <input type="text" name="break_times[{{ $index }}][break_end]" value="{{ $breakTime->break_end ? date('H:i', strtotime($breakTime->break_end)) : '' }}" class="show-time-input" placeholder="13:00">
+                                    <input type="text" name="break_times[{{ $index }}][break_end]" value="{{ old("break_times.{$index}.break_end", $breakTime->break_end ? date('H:i', strtotime($breakTime->break_end)) : '') }}" class="show-time-input @error("break_times.{$index}.break_end") show-input-error @enderror" placeholder="13:00">
                                 @else
                                     <span class="show-time-value">{{ $breakTime->break_end ? date('H:i', strtotime($breakTime->break_end)) : '' }}</span>
                                 @endif
                             </div>
+                            @error("break_times.{$index}.break_start")
+                                <div class="show-field-error">{{ $message }}</div>
+                            @enderror
+                            @error("break_times.{$index}.break_end")
+                                <div class="show-field-error">{{ $message }}</div>
+                            @enderror
+                            @if($errors->has("break_times.{$index}"))
+                                <div class="show-field-error">{{ $errors->first("break_times.{$index}") }}</div>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
@@ -83,10 +98,19 @@
                         <th class="show-label-cell">休憩{{ $newBreakIndex + 1 }}</th>
                         <td class="show-value-cell">
                             <div class="show-time-field">
-                                <input type="text" name="break_times[{{ $newBreakIndex }}][break_start]" value="" class="show-time-input" placeholder="12:00">
+                                <input type="text" name="break_times[{{ $newBreakIndex }}][break_start]" value="{{ old("break_times.{$newBreakIndex}.break_start", '') }}" class="show-time-input @error("break_times.{$newBreakIndex}.break_start") show-input-error @enderror" placeholder="12:00">
                                 <span class="show-time-separator">~</span>
-                                <input type="text" name="break_times[{{ $newBreakIndex }}][break_end]" value="" class="show-time-input" placeholder="13:00">
+                                <input type="text" name="break_times[{{ $newBreakIndex }}][break_end]" value="{{ old("break_times.{$newBreakIndex}.break_end", '') }}" class="show-time-input @error("break_times.{$newBreakIndex}.break_end") show-input-error @enderror" placeholder="13:00">
                             </div>
+                            @error("break_times.{$newBreakIndex}.break_start")
+                                <div class="show-field-error">{{ $message }}</div>
+                            @enderror
+                            @error("break_times.{$newBreakIndex}.break_end")
+                                <div class="show-field-error">{{ $message }}</div>
+                            @enderror
+                            @if($errors->has("break_times.{$newBreakIndex}"))
+                                <div class="show-field-error">{{ $errors->first("break_times.{$newBreakIndex}") }}</div>
+                            @endif
                         </td>
                     </tr>
                 @endif
@@ -94,7 +118,10 @@
                     <th class="show-label-cell">備考</th>
                     <td class="show-value-cell">
                         @if($canEdit)
-                            <input type="text" name="note" value="{{ $attendance->note ?? '' }}" class="show-note-input">
+                            <input type="text" name="note" value="{{ old('note', $attendance->note ?? '') }}" class="show-note-input @error('note') show-input-error @enderror">
+                            @error('note')
+                                <div class="show-field-error">{{ $message }}</div>
+                            @enderror
                         @else
                             <div class="show-value">{{ $attendance->note ?? '' }}</div>
                         @endif
@@ -114,11 +141,14 @@
         @endif
     </form>
 
-    @if($errors->any())
+    @if($errors->has('break_times') || $errors->has('attendance'))
         <div class="show-errors">
-            @foreach($errors->all() as $error)
-                <div class="show-error">{{ $error }}</div>
-            @endforeach
+            @if($errors->has('break_times'))
+                <div class="show-error">{{ $errors->first('break_times') }}</div>
+            @endif
+            @if($errors->has('attendance'))
+                <div class="show-error">{{ $errors->first('attendance') }}</div>
+            @endif
         </div>
     @endif
 </div>

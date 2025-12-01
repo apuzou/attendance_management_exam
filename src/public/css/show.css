@@ -161,3 +161,18 @@
     font-size: 14px;
     margin-bottom: 8px;
 }
+
+.show-field-error {
+    color: #c00;
+    font-size: 14px;
+    margin-top: 5px;
+    padding-left: 15px;
+}
+
+.show-input-error {
+    border-color: #c00;
+}
+
+.show-time-field + .show-field-error {
+    padding-left: 20px;
+}
