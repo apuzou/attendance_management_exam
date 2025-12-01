@@ -11,6 +11,7 @@ use App\Models\BreakCorrectionRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class AttendanceController extends Controller
@@ -194,44 +195,65 @@ class AttendanceController extends Controller
         DB::beginTransaction();
         
         try {
-            $date = $attendance->date;
-            $correctedClockIn = $request->corrected_clock_in;
-            $correctedClockOut = $request->corrected_clock_out;
-            $breakTimes = $request->break_times ?? [];
+            $correctedClockIn = $request->filled('corrected_clock_in') && trim($request->corrected_clock_in) !== '' ? trim($request->corrected_clock_in) : null;
+            $correctedClockOut = $request->filled('corrected_clock_out') && trim($request->corrected_clock_out) !== '' ? trim($request->corrected_clock_out) : null;
             
             $stampRequest = StampCorrectionRequest::create([
                 'attendance_id' => $attendance->id,
                 'user_id' => $user->id,
-                'request_date' => now()->toDateString(),
+                'request_date' => Carbon::today()->toDateString(),
                 'original_clock_in' => $attendance->clock_in,
                 'original_clock_out' => $attendance->clock_out,
                 'corrected_clock_in' => $correctedClockIn ? Carbon::createFromFormat('H:i', $correctedClockIn)->format('H:i:s') : null,
                 'corrected_clock_out' => $correctedClockOut ? Carbon::createFromFormat('H:i', $correctedClockOut)->format('H:i:s') : null,
-                'note' => $request->note,
+                'note' => trim($request->note),
             ]);
             
-            foreach ($breakTimes as $index => $break) {
-                if (!empty($break['break_start']) && !empty($break['break_end'])) {
-                    $existingBreak = isset($break['id']) && !empty($break['id']) ? $attendance->breakTimes->where('id', $break['id'])->first() : null;
-                    
-                    BreakCorrectionRequest::create([
-                        'stamp_correction_request_id' => $stampRequest->id,
-                        'break_time_id' => $existingBreak ? $existingBreak->id : null,
-                        'original_break_start' => $existingBreak ? $existingBreak->break_start : null,
-                        'original_break_end' => $existingBreak ? $existingBreak->break_end : null,
-                        'corrected_break_start' => Carbon::createFromFormat('H:i', $break['break_start'])->format('H:i:s'),
-                        'corrected_break_end' => Carbon::createFromFormat('H:i', $break['break_end'])->format('H:i:s'),
-                    ]);
+            $breakTimes = $request->break_times ?? [];
+            
+            foreach ($breakTimes as $break) {
+                $breakStart = isset($break['break_start']) && trim($break['break_start']) !== '' ? trim($break['break_start']) : null;
+                $breakEnd = isset($break['break_end']) && trim($break['break_end']) !== '' ? trim($break['break_end']) : null;
+                
+                if (!$breakStart || !$breakEnd) {
+                    continue;
                 }
+                
+                $existingBreak = null;
+                if (isset($break['id']) && !empty($break['id'])) {
+                    $existingBreak = $attendance->breakTimes->where('id', $break['id'])->first();
+                }
+                
+                BreakCorrectionRequest::create([
+                    'stamp_correction_request_id' => $stampRequest->id,
+                    'break_time_id' => $existingBreak ? $existingBreak->id : null,
+                    'original_break_start' => $existingBreak ? $existingBreak->break_start : null,
+                    'original_break_end' => $existingBreak ? $existingBreak->break_end : null,
+                    'corrected_break_start' => Carbon::createFromFormat('H:i', $breakStart)->format('H:i:s'),
+                    'corrected_break_end' => Carbon::createFromFormat('H:i', $breakEnd)->format('H:i:s'),
+                ]);
             }
             
             DB::commit();
             
-            return redirect()->route('attendance.show', $id)->with('success', '修正申請が完了しました');
+            Log::info('修正申請が正常に作成されました', [
+                'user_id' => $user->id,
+                'attendance_id' => $id,
+                'stamp_request_id' => $stampRequest->id,
+            ]);
+            
+            return redirect()->route('correction.index')->with('success', '修正申請を送信しました。');
             
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['note' => '修正申請の作成に失敗しました']);
+            Log::error('修正申請の作成に失敗しました', [
+                'user_id' => $user->id,
+                'attendance_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+            ]);
+            return back()->withErrors(['note' => '修正申請の作成に失敗しました。エラー: ' . $e->getMessage()])->withInput();
         }
     }
 }

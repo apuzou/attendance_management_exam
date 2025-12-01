@@ -7,7 +7,7 @@
 @endpush
 
 @section('content')
-<div class="auth-container">
+<div class="container auth-container">
     <h2 class="auth-title">認証コード入力</h2>
 
     <p class="auth-description">

@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('css/message.css') }}">
     <link rel="stylesheet" href="{{ asset('css/components/title.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/components/container.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/components/table.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/components/link.css') }}">
     @stack('styles')
 </head>
 <body>
