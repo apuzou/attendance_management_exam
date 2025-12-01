@@ -50,9 +50,10 @@ class CorrectionRequest extends FormRequest
                 return;
             }
 
-            $correctedClockIn = $this->corrected_clock_in;
-            $correctedClockOut = $this->corrected_clock_out;
+            $correctedClockIn = $this->corrected_clock_in ? trim($this->corrected_clock_in) : null;
+            $correctedClockOut = $this->corrected_clock_out ? trim($this->corrected_clock_out) : null;
 
+            // 出勤時間と退勤時間の両方が入力されている場合の整合性チェック
             if ($correctedClockIn && $correctedClockOut) {
                 $clockInTime = Carbon::parse($correctedClockIn);
                 $clockOutTime = Carbon::parse($correctedClockOut);
@@ -61,11 +62,51 @@ class CorrectionRequest extends FormRequest
                     $validator->errors()->add('corrected_clock_in', '出勤時刻または退勤時刻が不適切な値です');
                     return;
                 }
+            }
 
-                $breakTimes = $this->break_times ?? [];
+            $breakTimes = $this->break_times ?? [];
+            $clockInTime = $correctedClockIn ? Carbon::parse($correctedClockIn) : null;
+            $clockOutTime = $correctedClockOut ? Carbon::parse($correctedClockOut) : null;
+
+            // 出勤時間が入力されている場合、すべての休憩開始時間が出勤時間以降であることをチェック
+            if ($clockInTime) {
+                foreach ($breakTimes as $index => $break) {
+                    $breakStartValue = isset($break['break_start']) ? trim($break['break_start']) : '';
+
+                    if (empty($breakStartValue)) {
+                        continue;
+                    }
+
+                    $breakStart = Carbon::parse($breakStartValue);
+
+                    if ($breakStart->lt($clockInTime)) {
+                        $validator->errors()->add("break_times.{$index}.break_start", '休憩開始時間は出勤時間より後に設定してください');
+                    }
+                }
+            }
+
+            // 退勤時間が入力されている場合、すべての休憩終了時間が退勤時間以前であることをチェック
+            if ($clockOutTime) {
+                foreach ($breakTimes as $index => $break) {
+                    $breakEndValue = isset($break['break_end']) ? trim($break['break_end']) : '';
+
+                    if (empty($breakEndValue)) {
+                        continue;
+                    }
+
+                    $breakEnd = Carbon::parse($breakEndValue);
+
+                    if ($breakEnd->gt($clockOutTime)) {
+                        $validator->errors()->add("break_times.{$index}.break_end", '休憩終了時間は退勤時間より前に設定してください');
+                    }
+                }
+            }
+
+            // 出勤時間と退勤時間の両方が入力されている場合の詳細チェック
+            if ($clockInTime && $clockOutTime) {
                 $totalBreakMinutes = 0;
 
-                foreach ($breakTimes as $break) {
+                foreach ($breakTimes as $index => $break) {
                     $breakStartValue = isset($break['break_start']) ? trim($break['break_start']) : '';
                     $breakEndValue = isset($break['break_end']) ? trim($break['break_end']) : '';
 
@@ -76,23 +117,30 @@ class CorrectionRequest extends FormRequest
                     $breakStart = Carbon::parse($breakStartValue);
                     $breakEnd = Carbon::parse($breakEndValue);
 
+                    // 休憩開始時間と終了時間が同じまたは開始時間が終了時間より後の場合はスキップ
                     if ($breakEnd->lte($breakStart)) {
                         continue;
                     }
 
+                    // 休憩時間が出勤時間と退勤時間の範囲内にあることをチェック
                     if ($breakStart->lt($clockInTime)) {
-                        $validator->errors()->add('break_times', '休憩時間が不適切な値です');
-                        return;
+                        $validator->errors()->add("break_times.{$index}.break_start", '休憩開始時間は出勤時間より後に設定してください');
+                        continue;
                     }
 
                     if ($breakStart->gt($clockOutTime)) {
-                        $validator->errors()->add('break_times', '休憩時間が不適切な値です');
-                        return;
+                        $validator->errors()->add("break_times.{$index}.break_start", '休憩開始時間は退勤時間より前に設定してください');
+                        continue;
                     }
 
                     if ($breakEnd->gt($clockOutTime)) {
-                        $validator->errors()->add('break_times', '休憩時間または退勤時刻が不適切な値です');
-                        return;
+                        $validator->errors()->add("break_times.{$index}.break_end", '休憩終了時間は退勤時間より前に設定してください');
+                        continue;
+                    }
+
+                    if ($breakEnd->lt($clockInTime)) {
+                        $validator->errors()->add("break_times.{$index}.break_end", '休憩終了時間は出勤時間より後に設定してください');
+                        continue;
                     }
 
                     $totalBreakMinutes += $breakStart->diffInMinutes($breakEnd);
