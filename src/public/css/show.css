@@ -1,14 +1,6 @@
 /* 勤怠詳細画面スタイル */
 
-.show-container {
-    width: 100%;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 40px 20px;
-}
-
 .show-form {
-    background-color: #fff;
     padding: 0 30px;
     border-radius: 8px;
     margin-bottom: 0;
@@ -18,6 +10,7 @@
 .show-table {
     width: calc(100% + 60px);
     margin: 0 -30px;
+    background-color: #fff;
     border-collapse: separate;
     border-spacing: 0;
 }
@@ -152,7 +145,6 @@
     text-align: right;
     margin-top: 30px;
     padding: 0 30px 30px 30px;
-    background-color: #fff;
     border-radius: 0 0 8px 8px;
     font-size: 14px;
 }

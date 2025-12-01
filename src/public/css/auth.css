@@ -2,10 +2,8 @@
 
 /* 認証コンテナコンポーネント */
 .auth-container {
-    width: 100%;
     max-width: 500px;
     padding: 40px;
-    margin: 0 auto;
 }
 
 .auth-title {

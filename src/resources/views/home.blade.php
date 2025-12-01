@@ -7,7 +7,7 @@
 @section('title', '勤怠登録 - CT_勤怠管理')
 
 @section('content')
-<div class="attendance-container">
+<div class="container attendance-container">
     <div class="attendance-status">
         <span class="status-badge">
             {{ $status }}
