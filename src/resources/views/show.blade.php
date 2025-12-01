@@ -7,7 +7,7 @@
 @section('title', '勤怠詳細 - CT_勤怠管理')
 
 @section('content')
-<div class="show-container">
+<div class="container">
     <div class="title">
         <span class="title-bar">|</span> 勤怠詳細
     </div>
@@ -102,17 +102,17 @@
                 </tr>
             </tbody>
         </table>
-    </form>
 
-    @if($canEdit)
-        <div class="show-actions">
-            <button type="submit" form="show-form" class="show-submit-button">修正</button>
-        </div>
-    @else
-        <div class="show-error-message">
-            *承認待ちのため修正はできません。
-        </div>
-    @endif
+        @if($canEdit)
+            <div class="show-actions">
+                <button type="submit" class="show-submit-button">修正</button>
+            </div>
+        @else
+            <div class="show-error-message">
+                *承認待ちのため修正はできません。
+            </div>
+        @endif
+    </form>
 
     @if($errors->any())
         <div class="show-errors">

@@ -66,32 +66,36 @@ class CorrectionRequest extends FormRequest
                 $totalBreakMinutes = 0;
 
                 foreach ($breakTimes as $break) {
-                    if (!empty($break['break_start']) && !empty($break['break_end'])) {
-                        $breakStart = Carbon::parse($break['break_start']);
-                        $breakEnd = Carbon::parse($break['break_end']);
+                    $breakStartValue = isset($break['break_start']) ? trim($break['break_start']) : '';
+                    $breakEndValue = isset($break['break_end']) ? trim($break['break_end']) : '';
 
-                        if ($breakStart->lt($clockInTime)) {
-                            $validator->errors()->add('break_times', '休憩時間が不適切な値です');
-                            return;
-                        }
-
-                        if ($breakStart->gt($clockOutTime)) {
-                            $validator->errors()->add('break_times', '休憩時間が不適切な値です');
-                            return;
-                        }
-
-                        if ($breakEnd->gt($clockOutTime)) {
-                            $validator->errors()->add('break_times', '休憩時間または退勤時刻が不適切な値です');
-                            return;
-                        }
-
-                        if ($breakEnd->lte($breakStart)) {
-                            $validator->errors()->add('break_times', '休憩開始時刻より前に休憩を終了できません');
-                            return;
-                        }
-
-                        $totalBreakMinutes += $breakStart->diffInMinutes($breakEnd);
+                    if (empty($breakStartValue) || empty($breakEndValue)) {
+                        continue;
                     }
+
+                    $breakStart = Carbon::parse($breakStartValue);
+                    $breakEnd = Carbon::parse($breakEndValue);
+
+                    if ($breakEnd->lte($breakStart)) {
+                        continue;
+                    }
+
+                    if ($breakStart->lt($clockInTime)) {
+                        $validator->errors()->add('break_times', '休憩時間が不適切な値です');
+                        return;
+                    }
+
+                    if ($breakStart->gt($clockOutTime)) {
+                        $validator->errors()->add('break_times', '休憩時間が不適切な値です');
+                        return;
+                    }
+
+                    if ($breakEnd->gt($clockOutTime)) {
+                        $validator->errors()->add('break_times', '休憩時間または退勤時刻が不適切な値です');
+                        return;
+                    }
+
+                    $totalBreakMinutes += $breakStart->diffInMinutes($breakEnd);
                 }
 
                 $workMinutes = $clockInTime->diffInMinutes($clockOutTime);

@@ -7,7 +7,7 @@
 @endpush
 
 @section('content')
-<div class="auth-container">
+<div class="container auth-container">
     <h2 class="auth-title">会員登録</h2>
 
     <form method="POST" action="{{ route('register') }}" class="auth-form">

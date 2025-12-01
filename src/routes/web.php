@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\StampCorrectionRequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,7 +60,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/attendance/detail/{id}', [AttendanceController::class, 'show'])->name('attendance.show');
     Route::post('/attendance/detail/{id}', [AttendanceController::class, 'update'])->name('attendance.update');
     
-    Route::get('/stamp_correction_request/list', function () {
-        return view('welcome');
-    })->name('correction.index');
+    Route::get('/stamp_correction_request/list', [StampCorrectionRequestController::class, 'index'])
+        ->name('correction.index');
 });

@@ -1,0 +1,60 @@
+/* 申請一覧画面スタイル */
+
+.correction-container {
+    margin-top: 30px;
+}
+
+/* 申請一覧画面でのみmainの中央配置を無効化 */
+.main:has(.correction-container) {
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.correction-table {
+    margin-top: 0;
+}
+
+.correction-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #ddd;
+}
+
+.correction-tab {
+    padding: 12px 20px;
+    color: #666;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.correction-tab:hover {
+    color: #000;
+}
+
+.correction-tab--active {
+    color: #000;
+    border-bottom-color: #000;
+    font-weight: bold;
+}
+
+.correction-tab-content {
+    display: none;
+}
+
+.correction-tab-content--active {
+    display: block;
+}
+
+.correction-empty {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+}

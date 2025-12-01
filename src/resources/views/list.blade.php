@@ -7,7 +7,7 @@
 @section('title', '勤怠一覧 - CT_勤怠管理')
 
 @section('content')
-<div class="list-container">
+<div class="container">
     <div class="title">
         <span class="title-bar">|</span> 勤怠一覧
     </div>
@@ -20,7 +20,7 @@
         <a href="{{ route('attendance.list', ['month' => $nextMonth]) }}" class="list-month-link">翌月→</a>
     </div>
 
-    <table class="list-table">
+    <table class="table">
         <thead>
             <tr>
                 <th>日付</th>
@@ -51,7 +51,7 @@
                     <td>{{ $attendance ? $attendance->getWorkTime() : '' }}</td>
                     <td>
                         @if($attendance)
-                            <a href="{{ route('attendance.show', $attendance->id) }}" class="list-detail-link">詳細</a>
+                            <a href="{{ route('attendance.show', $attendance->id) }}" class="detail-link">詳細</a>
                         @endif
                     </td>
                 </tr>
