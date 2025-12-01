@@ -8,8 +8,8 @@
 
 @section('content')
 <div class="list-container">
-    <div class="list-title">
-        | 勤怠一覧
+    <div class="title">
+        <span class="title-bar">|</span> 勤怠一覧
     </div>
 
     <div class="list-month-navigation">
