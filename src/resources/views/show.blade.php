@@ -8,8 +8,8 @@
 
 @section('content')
 <div class="show-container">
-    <div class="show-title">
-        <span class="show-title-bar">|</span> 勤怠詳細
+    <div class="title">
+        <span class="title-bar">|</span> 勤怠詳細
     </div>
 
     <form method="POST" action="{{ route('attendance.update', $attendance->id) }}" class="show-form" id="show-form">
