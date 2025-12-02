@@ -37,15 +37,15 @@
                     <td class="show-value-cell">
                         <div class="show-time-field">
                             @if($canEdit)
-                                <input type="text" name="corrected_clock_in" value="{{ old('corrected_clock_in', $attendance->clock_in ? date('H:i', strtotime($attendance->clock_in)) : '') }}" class="show-time-input @error('corrected_clock_in') show-input-error @enderror" placeholder="09:00">
+                                <input type="text" name="corrected_clock_in" value="{{ old('corrected_clock_in', $pendingRequest && $pendingRequest->corrected_clock_in ? date('H:i', strtotime($pendingRequest->corrected_clock_in)) : ($attendance->clock_in ? date('H:i', strtotime($attendance->clock_in)) : '')) }}" class="show-time-input @error('corrected_clock_in') show-input-error @enderror" placeholder="09:00">
                             @else
-                                <span class="show-time-value">{{ $attendance->clock_in ? date('H:i', strtotime($attendance->clock_in)) : '' }}</span>
+                                <span class="show-time-value">{{ $pendingRequest && $pendingRequest->corrected_clock_in ? date('H:i', strtotime($pendingRequest->corrected_clock_in)) : ($attendance->clock_in ? date('H:i', strtotime($attendance->clock_in)) : '') }}</span>
                             @endif
                             <span class="show-time-separator">~</span>
                             @if($canEdit)
-                                <input type="text" name="corrected_clock_out" value="{{ old('corrected_clock_out', $attendance->clock_out ? date('H:i', strtotime($attendance->clock_out)) : '') }}" class="show-time-input @error('corrected_clock_out') show-input-error @enderror" placeholder="18:00">
+                                <input type="text" name="corrected_clock_out" value="{{ old('corrected_clock_out', $pendingRequest && $pendingRequest->corrected_clock_out ? date('H:i', strtotime($pendingRequest->corrected_clock_out)) : ($attendance->clock_out ? date('H:i', strtotime($attendance->clock_out)) : '')) }}" class="show-time-input @error('corrected_clock_out') show-input-error @enderror" placeholder="18:00">
                             @else
-                                <span class="show-time-value">{{ $attendance->clock_out ? date('H:i', strtotime($attendance->clock_out)) : '' }}</span>
+                                <span class="show-time-value">{{ $pendingRequest && $pendingRequest->corrected_clock_out ? date('H:i', strtotime($pendingRequest->corrected_clock_out)) : ($attendance->clock_out ? date('H:i', strtotime($attendance->clock_out)) : '') }}</span>
                             @endif
                         </div>
                         @error('corrected_clock_in')
@@ -57,24 +57,85 @@
                     </td>
                 </tr>
                 @php
-                    $breakTimes = $attendance->breakTimes->sortBy('id');
+                    // 承認待ちの修正申請がある場合、修正申請の休憩時間を使用
+                    if ($pendingRequest && $pendingRequest->breakCorrectionRequests) {
+                        $displayBreakTimes = [];
+                        $breakCorrectionRequests = $pendingRequest->breakCorrectionRequests->sortBy('id');
+                        
+                        // 既存の休憩時間を修正申請で更新
+                        $existingBreakTimes = $attendance->breakTimes->sortBy('id');
+                        foreach ($existingBreakTimes as $breakTime) {
+                            $correctionRequest = $breakCorrectionRequests->where('break_time_id', $breakTime->id)->first();
+                            if ($correctionRequest) {
+                                $displayBreakTimes[] = [
+                                    'id' => $breakTime->id,
+                                    'break_start' => $correctionRequest->corrected_break_start,
+                                    'break_end' => $correctionRequest->corrected_break_end,
+                                    'is_new' => false,
+                                ];
+                            } else {
+                                $displayBreakTimes[] = [
+                                    'id' => $breakTime->id,
+                                    'break_start' => $breakTime->break_start,
+                                    'break_end' => $breakTime->break_end,
+                                    'is_new' => false,
+                                ];
+                            }
+                        }
+                        
+                        // 新規追加の休憩時間を追加
+                        foreach ($breakCorrectionRequests->whereNull('break_time_id') as $correctionRequest) {
+                            $displayBreakTimes[] = [
+                                'id' => null,
+                                'break_start' => $correctionRequest->corrected_break_start,
+                                'break_end' => $correctionRequest->corrected_break_end,
+                                'is_new' => true,
+                            ];
+                        }
+                        
+                        // 表示用に時系列でソート（開始時刻でソート）
+                        usort($displayBreakTimes, function ($first, $second) {
+                            $firstStart = strtotime($first['break_start']);
+                            $secondStart = strtotime($second['break_start']);
+                            return $firstStart <=> $secondStart;
+                        });
+                    } else {
+                        // 修正申請がない場合、通常の休憩時間を使用
+                        $displayBreakTimes = $attendance->breakTimes->sortBy('id')->map(function($breakTime) {
+                            return [
+                                'id' => $breakTime->id,
+                                'break_start' => $breakTime->break_start,
+                                'break_end' => $breakTime->break_end,
+                                'is_new' => false,
+                            ];
+                        })->toArray();
+                        
+                        // 表示用に時系列でソート（開始時刻でソート）
+                        usort($displayBreakTimes, function ($first, $second) {
+                            $firstStart = strtotime($first['break_start']);
+                            $secondStart = strtotime($second['break_start']);
+                            return $firstStart <=> $secondStart;
+                        });
+                    }
                 @endphp
-                @foreach($breakTimes as $index => $breakTime)
+                @foreach($displayBreakTimes as $index => $breakTimeData)
                     <tr>
                         <th class="show-label-cell">休憩{{ $index + 1 }}</th>
                         <td class="show-value-cell">
                             <div class="show-time-field">
                                 @if($canEdit)
-                                    <input type="hidden" name="break_times[{{ $index }}][id]" value="{{ $breakTime->id }}">
-                                    <input type="text" name="break_times[{{ $index }}][break_start]" value="{{ old("break_times.{$index}.break_start", $breakTime->break_start ? date('H:i', strtotime($breakTime->break_start)) : '') }}" class="show-time-input @error("break_times.{$index}.break_start") show-input-error @enderror" placeholder="12:00">
+                                    @if($breakTimeData['id'])
+                                        <input type="hidden" name="break_times[{{ $index }}][id]" value="{{ $breakTimeData['id'] }}">
+                                    @endif
+                                    <input type="text" name="break_times[{{ $index }}][break_start]" value="{{ old("break_times.{$index}.break_start", $breakTimeData['break_start'] ? date('H:i', strtotime($breakTimeData['break_start'])) : '') }}" class="show-time-input @error("break_times.{$index}.break_start") show-input-error @enderror" placeholder="12:00">
                                 @else
-                                    <span class="show-time-value">{{ $breakTime->break_start ? date('H:i', strtotime($breakTime->break_start)) : '' }}</span>
+                                    <span class="show-time-value">{{ $breakTimeData['break_start'] ? date('H:i', strtotime($breakTimeData['break_start'])) : '' }}</span>
                                 @endif
                                 <span class="show-time-separator">~</span>
                                 @if($canEdit)
-                                    <input type="text" name="break_times[{{ $index }}][break_end]" value="{{ old("break_times.{$index}.break_end", $breakTime->break_end ? date('H:i', strtotime($breakTime->break_end)) : '') }}" class="show-time-input @error("break_times.{$index}.break_end") show-input-error @enderror" placeholder="13:00">
+                                    <input type="text" name="break_times[{{ $index }}][break_end]" value="{{ old("break_times.{$index}.break_end", $breakTimeData['break_end'] ? date('H:i', strtotime($breakTimeData['break_end'])) : '') }}" class="show-time-input @error("break_times.{$index}.break_end") show-input-error @enderror" placeholder="13:00">
                                 @else
-                                    <span class="show-time-value">{{ $breakTime->break_end ? date('H:i', strtotime($breakTime->break_end)) : '' }}</span>
+                                    <span class="show-time-value">{{ $breakTimeData['break_end'] ? date('H:i', strtotime($breakTimeData['break_end'])) : '' }}</span>
                                 @endif
                             </div>
                             @error("break_times.{$index}.break_start")
@@ -92,7 +153,7 @@
 
                 @if($canEdit)
                     @php
-                        $newBreakIndex = count($breakTimes);
+                        $newBreakIndex = count($displayBreakTimes);
                     @endphp
                     <tr>
                         <th class="show-label-cell">休憩{{ $newBreakIndex + 1 }}</th>
@@ -118,12 +179,12 @@
                     <th class="show-label-cell">備考</th>
                     <td class="show-value-cell">
                         @if($canEdit)
-                            <input type="text" name="note" value="{{ old('note', $attendance->note ?? '') }}" class="show-note-input @error('note') show-input-error @enderror">
+                            <input type="text" name="note" value="{{ old('note', $pendingRequest && $pendingRequest->note ? $pendingRequest->note : ($attendance->note ?? '')) }}" class="show-note-input @error('note') show-input-error @enderror">
                             @error('note')
                                 <div class="show-field-error">{{ $message }}</div>
                             @enderror
                         @else
-                            <div class="show-value">{{ $attendance->note ?? '' }}</div>
+                            <div class="show-value">{{ $pendingRequest && $pendingRequest->note ? $pendingRequest->note : ($attendance->note ?? '') }}</div>
                         @endif
                     </td>
                 </tr>
