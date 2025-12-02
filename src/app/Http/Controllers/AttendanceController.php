@@ -100,7 +100,7 @@ class AttendanceController extends Controller
             
             return redirect()->route('attendance.index')->with('success', '打刻が完了しました');
             
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             DB::rollBack();
             return back()->withErrors(['stamp_type' => '打刻処理に失敗しました']);
         }
@@ -164,6 +164,7 @@ class AttendanceController extends Controller
         
         $pendingRequest = StampCorrectionRequest::where('attendance_id', $attendance->id)
             ->whereNull('approved_at')
+            ->with('breakCorrectionRequests')
             ->first();
         
         $canEdit = is_null($pendingRequest);
@@ -244,16 +245,16 @@ class AttendanceController extends Controller
             
             return redirect()->route('correction.index')->with('success', '修正申請を送信しました。');
             
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             DB::rollBack();
             Log::error('修正申請の作成に失敗しました', [
                 'user_id' => $user->id,
                 'attendance_id' => $id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'error' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
                 'request_data' => $request->all(),
             ]);
-            return back()->withErrors(['note' => '修正申請の作成に失敗しました。エラー: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['note' => '修正申請の作成に失敗しました。エラー: ' . $exception->getMessage()])->withInput();
         }
     }
 }

@@ -41,14 +41,13 @@
 
 .show-value {
     color: #333;
-    padding-left: 15px;
 }
 
 .show-date-field {
     display: flex;
-    padding-left: 20px;
+    /* padding-left: 5px; */
     align-items: center;
-    gap: 170px;
+    gap: 135px;
 }
 
 .show-date-value {
