@@ -17,6 +17,9 @@ class AuthenticatedSessionController extends Controller
         if ($user && Hash::check($request->password, $user->password)) {
             Auth::login($user, $request->filled('remember'));
             
+            // 通常ログイン画面からのログインなので、管理者ログインフラグをクリア
+            session()->forget('is_admin_login');
+            
             // ログイン後、最新のユーザー情報を取得
             $user->refresh();
 
@@ -24,10 +27,7 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->route('verification.notice');
             }
             
-            if ($user->role === 'admin') {
-                return redirect()->route('admin.index');
-            }
-            
+            // 管理者も一般ユーザーと同じく勤怠画面に遷移
             return redirect()->route('attendance.index');
         }
 
@@ -38,11 +38,19 @@ class AuthenticatedSessionController extends Controller
 
     public function destroy(Request $request)
     {
+        // ログアウト前にセッションフラグを確認
+        $isAdminLogin = session('is_admin_login');
+        
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
+
+        // 管理者ログイン画面からログインしていた場合のみ管理者ログイン画面にリダイレクト
+        if ($isAdminLogin) {
+            return redirect()->route('admin.login');
+        }
 
         return redirect()->route('login');
     }
