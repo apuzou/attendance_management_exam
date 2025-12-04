@@ -51,7 +51,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // 勤怠関連（一般ユーザー）
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified.email'])->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     
