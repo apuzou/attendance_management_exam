@@ -14,7 +14,8 @@ class EnsureEmailIsVerified
             $user = Auth::user();
             
             if ($user->role === 'general' && !$user->email_verified_at) {
-                if (!$request->routeIs('verification.*')) {
+                // ログアウトとメール認証関連のルート以外は、メール認証画面にリダイレクト
+                if (!$request->routeIs('logout') && !$request->routeIs('verification.*')) {
                     return redirect()->route('verification.notice');
                 }
             }

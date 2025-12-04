@@ -35,6 +35,7 @@
 
 .attendance-message {
     font-size: 18px;
+    font-weight: bold;
     color: #333;
     margin-top: 20px;
 }
