@@ -10,19 +10,26 @@
     <link rel="stylesheet" href="{{ asset('css/components/container.css') }}">
     <link rel="stylesheet" href="{{ asset('css/components/table.css') }}">
     <link rel="stylesheet" href="{{ asset('css/components/link.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/components/navigation.css') }}">
     @stack('styles')
 </head>
 <body>
-    <header class="header">
+    <header class="header {{ Auth::check() && Auth::user()->role === 'admin' && session('is_admin_login') ? 'admin-header' : '' }}">
         @auth
             <div class="header__inner">
                 <h1 class="header__logo">
                     <img src="{{ asset('storage/logo.svg') }}" alt="COACHTECH" class="header__logo-image">
                 </h1>
                 <nav class="header__nav">
-                    <a href="{{ route('attendance.index') }}" class="header__nav-link">勤怠</a>
-                    <a href="{{ route('attendance.list') }}" class="header__nav-link">勤怠一覧</a>
-                    <a href="{{ route('correction.index') }}" class="header__nav-link">申請</a>
+                    @if(Auth::user()->role === 'admin' && session('is_admin_login'))
+                        <a href="{{ route('admin.index') }}" class="header__nav-link">勤怠一覧</a>
+                        <a href="#" class="header__nav-link">スタッフ一覧</a>
+                        <a href="{{ route('correction.index') }}" class="header__nav-link">申請一覧</a>
+                    @else
+                        <a href="{{ route('attendance.index') }}" class="header__nav-link">勤怠</a>
+                        <a href="{{ route('attendance.list') }}" class="header__nav-link">勤怠一覧</a>
+                        <a href="{{ route('correction.index') }}" class="header__nav-link">申請</a>
+                    @endif
                     <form method="POST" action="{{ route('logout') }}" class="header__nav-form">
                         @csrf
                         <button type="submit" class="header__nav-link header__nav-link--button">ログアウト</button>
@@ -30,9 +37,11 @@
                 </nav>
             </div>
         @else
-            <h1 class="header__logo">
-                <img src="{{ asset('storage/logo.svg') }}" alt="COACHTECH" class="header__logo-image">
-            </h1>
+            <div class="header__inner">
+                <h1 class="header__logo">
+                    <img src="{{ asset('storage/logo.svg') }}" alt="COACHTECH" class="header__logo-image">
+                </h1>
+            </div>
         @endauth
     </header>
     @if (session('success'))
@@ -46,4 +55,3 @@
     </main>
 </body>
 </html>
-

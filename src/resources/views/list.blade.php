@@ -12,12 +12,12 @@
         <span class="title-bar">|</span> 勤怠一覧
     </div>
 
-    <div class="list-month-navigation">
-        <a href="{{ route('attendance.list', ['month' => $prevMonth]) }}" class="list-month-link">←前月</a>
-        <span class="list-month-current">
+    <div class="navigation list-month-navigation">
+        <a href="{{ route('attendance.list', ['month' => $prevMonth]) }}" class="navigation-link">←前月</a>
+        <span class="navigation-current list-month-current">
             📅 {{ $currentMonth->format('Y/m') }}
         </span>
-        <a href="{{ route('attendance.list', ['month' => $nextMonth]) }}" class="list-month-link">翌月→</a>
+        <a href="{{ route('attendance.list', ['month' => $nextMonth]) }}" class="navigation-link">翌月→</a>
     </div>
 
     <table class="table">

@@ -4,8 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\AdminLoginController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\StampCorrectionRequestController;
+use App\Http\Controllers\AdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -62,4 +64,16 @@ Route::middleware(['auth', 'verified.email'])->group(function () {
     
     Route::get('/stamp_correction_request/list', [StampCorrectionRequestController::class, 'index'])
         ->name('correction.index');
+});
+
+// 管理者向けルート
+Route::middleware(['guest'])->group(function () {
+    Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('/admin/login', [AdminLoginController::class, 'login']);
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('admin')->group(function () {
+        Route::get('/attendance/list', [AdminController::class, 'index'])->name('admin.index');
+    });
 });

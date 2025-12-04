@@ -29,7 +29,7 @@ body {
     align-items: center;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px;
+    text-align: left;
 }
 
 @media (min-width: 1400px) and (max-width: 1540px) {
@@ -116,6 +116,18 @@ body {
 
 .header__nav-form {
     display: inline;
+}
+
+/* 管理者ヘッダー（認証済み） */
+.admin-header .header__inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-header .header__nav {
+    flex: 1;
+    justify-content: flex-end;
 }
 
 /* メインコンテナ（共通） */

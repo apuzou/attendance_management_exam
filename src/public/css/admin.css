@@ -1,0 +1,23 @@
+/* 管理者画面共通スタイル */
+
+/* admin-date-currentの追加スタイル（flex表示用） */
+.admin-date-current {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-date-icon {
+    font-size: 16px;
+}
+
+/* 管理者画面でのみmainの中央配置を無効化 */
+body:has(.admin-header) .main {
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+/* 管理者画面のコンテナ調整 */
+.admin-container {
+    margin-top: 30px;
+}
