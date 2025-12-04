@@ -6,11 +6,38 @@
     padding: 40px;
 }
 
+@media (max-width: 1024px) {
+    .auth-container {
+        padding: 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .auth-container {
+        padding: 20px 15px;
+        max-width: 100%;
+    }
+}
+
 .auth-title {
     text-align: center;
     font-size: 24px;
     font-weight: bold;
     margin-bottom: 30px;
+}
+
+@media (max-width: 1024px) {
+    .auth-title {
+        font-size: 22px;
+        margin-bottom: 25px;
+    }
+}
+
+@media (max-width: 768px) {
+    .auth-title {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
 }
 
 .auth-message {
@@ -19,15 +46,42 @@
     line-height: 1.6;
 }
 
+@media (max-width: 1024px) {
+    .auth-message {
+        margin-bottom: 25px;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .auth-message {
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+}
+
 .auth-description {
     text-align: center;
     color: #666;
     margin-bottom: 30px;
 }
 
+@media (max-width: 768px) {
+    .auth-description {
+        margin-bottom: 20px;
+        font-size: 13px;
+    }
+}
+
 .auth-actions {
     text-align: center;
     margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .auth-actions {
+        margin-bottom: 15px;
+    }
 }
 
 .auth-button {
@@ -41,6 +95,15 @@
     font-size: 16px;
 }
 
+@media (max-width: 768px) {
+    .auth-button {
+        width: 100%;
+        max-width: 280px;
+        padding: 10px 25px;
+        font-size: 15px;
+    }
+}
+
 .auth-button:hover {
     background-color: #d1d5db;
 }
@@ -50,6 +113,12 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .auth-form {
+        gap: 15px;
+    }
 }
 
 /* フォームフィールドコンポーネント */
@@ -71,6 +140,12 @@
     font-size: 16px;
 }
 
+@media (max-width: 768px) {
+    .auth-input {
+        font-size: 16px;
+    }
+}
+
 .auth-input:focus {
     outline: none;
     border-color: #9333ea;
@@ -81,6 +156,13 @@
     font-size: 24px;
     letter-spacing: 8px;
     font-family: "Courier New", monospace;
+}
+
+@media (max-width: 768px) {
+    .auth-input--code {
+        font-size: 20px;
+        letter-spacing: 6px;
+    }
 }
 
 /* 送信ボタンコンポーネント */
@@ -96,6 +178,14 @@
     margin-top: 10px;
 }
 
+@media (max-width: 768px) {
+    .auth-submit {
+        width: 100%;
+        max-width: 280px;
+        margin-top: 5px;
+    }
+}
+
 .auth-submit:hover {
     background-color: #333;
 }
@@ -106,10 +196,22 @@
     margin-top: 20px;
 }
 
+@media (max-width: 768px) {
+    .auth-link {
+        margin-top: 15px;
+    }
+}
+
 .auth-link-text {
     color: #0066cc;
     text-decoration: none;
     font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .auth-link-text {
+        font-size: 13px;
+    }
 }
 
 .auth-link-text:hover {
@@ -124,6 +226,12 @@
     font-size: 14px;
     cursor: pointer;
     padding: 0;
+}
+
+@media (max-width: 768px) {
+    .auth-link-button {
+        font-size: 13px;
+    }
 }
 
 .auth-link-button:hover {

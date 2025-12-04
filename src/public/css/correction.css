@@ -4,6 +4,18 @@
     margin-top: 30px;
 }
 
+@media (max-width: 1024px) {
+    .correction-container {
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .correction-container {
+        margin-top: 15px;
+    }
+}
+
 /* 申請一覧画面でのみmainの中央配置を無効化 */
 .main:has(.correction-container) {
     justify-content: flex-start;
@@ -21,6 +33,20 @@
     border-bottom: 2px solid #ddd;
 }
 
+@media (max-width: 1024px) {
+    .correction-tabs {
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .correction-tabs {
+        margin-bottom: 15px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
 .correction-tab {
     padding: 12px 20px;
     color: #666;
@@ -33,6 +59,21 @@
     font-family: inherit;
     text-decoration: none;
     display: inline-block;
+}
+
+@media (max-width: 1024px) {
+    .correction-tab {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    .correction-tab {
+        padding: 8px 12px;
+        font-size: 13px;
+        white-space: nowrap;
+    }
 }
 
 .correction-tab:hover {
@@ -57,4 +98,11 @@
     text-align: center;
     padding: 40px;
     color: #999;
+}
+
+@media (max-width: 768px) {
+    .correction-empty {
+        padding: 30px 20px;
+        font-size: 14px;
+    }
 }
