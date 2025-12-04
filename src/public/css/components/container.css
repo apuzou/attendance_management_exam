@@ -6,3 +6,21 @@
     margin: 0 auto;
     padding: 40px 20px;
 }
+
+@media (min-width: 1400px) and (max-width: 1540px) {
+    .container {
+        max-width: min(900px, calc(100% - 80px));
+    }
+}
+
+@media (max-width: 1024px) {
+    .container {
+        padding: 30px 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 20px 10px;
+    }
+}
