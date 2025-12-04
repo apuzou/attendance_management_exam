@@ -12,40 +12,86 @@ use Carbon\Carbon;
 class GeneralUserSeeder extends Seeder
 {
     /**
-     * 一般ユーザーのダミーデータを作成
+     * ユーザーのダミーデータを作成
+     * 7名のユーザー（フルアクセス権限1名、部門アクセス権限2名、一般ユーザー4名）と
      * 2025年11月分の勤怠データを含む
      */
     public function run()
     {
-        // 3名の一般ユーザーを作成
+        // 7名のユーザーを作成
         $users = [
             [
                 'name' => '前田聖太',
                 'email' => 'maeda@example.com',
                 'password' => 'password123',
+                'role' => 'admin',
+                'department_code' => 1, // フルアクセス権限
             ],
             [
                 'name' => '佐藤花子',
                 'email' => 'sato@example.com',
                 'password' => 'password123',
+                'role' => 'admin',
+                'department_code' => 2, // A部門管理者（部門アクセス権限）
             ],
             [
                 'name' => '鈴木一郎',
                 'email' => 'suzuki@example.com',
                 'password' => 'password123',
+                'role' => 'admin',
+                'department_code' => 3, // B部門管理者（部門アクセス権限）
+            ],
+            [
+                'name' => '田中太郎',
+                'email' => 'tanaka@example.com',
+                'password' => 'password123',
+                'role' => 'general',
+                'department_code' => 2, // A部門一般ユーザー
+            ],
+            [
+                'name' => '山田花子',
+                'email' => 'yamada@example.com',
+                'password' => 'password123',
+                'role' => 'general',
+                'department_code' => 2, // A部門一般ユーザー
+            ],
+            [
+                'name' => '高橋次郎',
+                'email' => 'takahashi@example.com',
+                'password' => 'password123',
+                'role' => 'general',
+                'department_code' => 3, // B部門一般ユーザー
+            ],
+            [
+                'name' => '伊藤三郎',
+                'email' => 'ito@example.com',
+                'password' => 'password123',
+                'role' => 'general',
+                'department_code' => 3, // B部門一般ユーザー
             ],
         ];
 
         $createdUsers = [];
 
         foreach ($users as $userData) {
-            $user = User::create([
-                'name' => $userData['name'],
-                'email' => $userData['email'],
-                'password' => Hash::make($userData['password']),
-                'role' => 'general',
-                'email_verified_at' => now(),
-            ]);
+            $user = User::firstOrCreate(
+                ['email' => $userData['email']],
+                [
+                    'name' => $userData['name'],
+                    'password' => Hash::make($userData['password']),
+                    'role' => $userData['role'],
+                    'department_code' => $userData['department_code'],
+                    'email_verified_at' => now(),
+                ]
+            );
+
+            // 既存ユーザーの場合、パスワードとdepartment_codeを更新
+            if ($user->wasRecentlyCreated === false) {
+                $user->update([
+                    'password' => Hash::make($userData['password']),
+                    'department_code' => $userData['department_code'],
+                ]);
+            }
 
             $createdUsers[] = [
                 'user' => $user,
@@ -94,12 +140,39 @@ class GeneralUserSeeder extends Seeder
         }
 
         // ログイン情報を表示
-        echo "\n=== 一般ユーザーログイン情報 ===\n";
+        echo "\n=== ユーザーログイン情報 ===\n";
+        echo "\n【フルアクセス権限】\n";
         foreach ($createdUsers as $userData) {
-            echo "名前: {$userData['login_info']['name']}\n";
-            echo "メールアドレス: {$userData['login_info']['email']}\n";
-            echo "パスワード: {$userData['login_info']['password']}\n";
-            echo "---\n";
+            if ($userData['login_info']['department_code'] === 1) {
+                echo "名前: {$userData['login_info']['name']}\n";
+                echo "メールアドレス: {$userData['login_info']['email']}\n";
+                echo "パスワード: {$userData['login_info']['password']}\n";
+                echo "権限: フルアクセス（全ユーザーの勤怠を参照・修正・承認可能）\n";
+                echo "---\n";
+            }
+        }
+        
+        echo "\n【部門アクセス権限（管理者）】\n";
+        foreach ($createdUsers as $userData) {
+            if ($userData['login_info']['role'] === 'admin' && $userData['login_info']['department_code'] !== 1) {
+                echo "名前: {$userData['login_info']['name']}\n";
+                echo "メールアドレス: {$userData['login_info']['email']}\n";
+                echo "パスワード: {$userData['login_info']['password']}\n";
+                echo "権限: 部門管理者（同じ部門のメンバーの勤怠を参照・修正可能）\n";
+                echo "部門コード: {$userData['login_info']['department_code']}\n";
+                echo "---\n";
+            }
+        }
+        
+        echo "\n【一般ユーザー】\n";
+        foreach ($createdUsers as $userData) {
+            if ($userData['login_info']['role'] === 'general') {
+                echo "名前: {$userData['login_info']['name']}\n";
+                echo "メールアドレス: {$userData['login_info']['email']}\n";
+                echo "パスワード: {$userData['login_info']['password']}\n";
+                echo "部門コード: {$userData['login_info']['department_code']}\n";
+                echo "---\n";
+            }
         }
         echo "\n";
     }
