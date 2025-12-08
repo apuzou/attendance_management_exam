@@ -41,36 +41,6 @@ php artisan migrate
 php artisan db:seed
 ```
 
-### 環境変数設定
-
-`.env` ファイルで以下の設定を確認・設定してください：
-
-```env
-# アプリケーション設定
-APP_NAME=CT_勤怠管理
-APP_ENV=local
-APP_DEBUG=true
-APP_URL=http://localhost
-
-# データベース設定
-DB_CONNECTION=mysql
-DB_HOST=mysql
-DB_PORT=3306
-DB_DATABASE=laravel_db
-DB_USERNAME=laravel_user
-DB_PASSWORD=laravel_pass
-
-# メール設定（Mailhog使用）
-MAIL_MAILER=smtp
-MAIL_HOST=mailhog
-MAIL_PORT=1025
-MAIL_USERNAME=null
-MAIL_PASSWORD=null
-MAIL_ENCRYPTION=null
-MAIL_FROM_ADDRESS=CT.attendance@example.com
-MAIL_FROM_NAME="${APP_NAME}"
-```
-
 ## 使用技術
 
 ### バックエンド
