@@ -14,14 +14,17 @@
     @stack('styles')
 </head>
 <body>
-    <header class="header {{ Auth::check() && Auth::user()->role === 'admin' && session('is_admin_login') ? 'admin-header' : '' }}">
+    @php
+        $isAdminLogin = Auth::check() && Auth::user()->role === 'admin' && session('is_admin_login');
+    @endphp
+    <header class="header {{ $isAdminLogin ? 'admin-header' : '' }}">
         @auth
             <div class="header__inner">
                 <h1 class="header__logo">
                     <img src="{{ asset('storage/logo.svg') }}" alt="COACHTECH" class="header__logo-image">
                 </h1>
                 <nav class="header__nav">
-                    @if(Auth::user()->role === 'admin' && session('is_admin_login'))
+                    @if($isAdminLogin)
                         <a href="{{ route('admin.index') }}" class="header__nav-link">勤怠一覧</a>
                         <a href="#" class="header__nav-link">スタッフ一覧</a>
                         <a href="{{ route('correction.index') }}" class="header__nav-link">申請一覧</a>
