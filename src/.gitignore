@@ -1,4 +1,4 @@
-.cursor
+# .cursorはプロジェクトルートの.gitignoreで管理
 /node_modules
 /public/hot
 /public/storage
