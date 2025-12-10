@@ -130,6 +130,7 @@ class AdminController extends Controller
                 'clock_out' => $correctedClockOut,
                 'note' => trim($request->note),
                 'last_modified_by' => $currentUser->id,
+                'last_modified_at' => Carbon::now(),
             ]);
             
             // 休憩時間の更新（FN040）
