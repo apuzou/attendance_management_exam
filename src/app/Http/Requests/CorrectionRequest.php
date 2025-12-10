@@ -9,9 +9,36 @@ use Carbon\Carbon;
 
 class CorrectionRequest extends FormRequest
 {
+    /**
+     * 管理者による修正かどうかを判定
+     */
+    protected function isAdminRequest(): bool
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'admin') {
+            return false;
+        }
+        
+        // ルート名で判定
+        $routeName = $this->route()->getName();
+        return $routeName === 'admin.update';
+    }
+
     public function authorize()
     {
-        return true;
+        $attendance = Attendance::find($this->route('id'));
+        
+        if (!$attendance) {
+            return false;
+        }
+        
+        // 管理者の場合は権限チェック
+        if ($this->isAdminRequest()) {
+            return Auth::user()->canViewAttendance($attendance->user_id);
+        }
+        
+        // 一般ユーザーの場合は自分の勤怠のみ
+        return $attendance->user_id === Auth::id();
     }
 
     public function rules()
@@ -31,7 +58,7 @@ class CorrectionRequest extends FormRequest
         return [
             'corrected_clock_in.date_format' => '修正出勤時間は時間形式で入力してください',
             'corrected_clock_out.date_format' => '修正退勤時間は時間形式で入力してください',
-            'note.required' => '備考を入力してください',
+            'note.required' => '備考を記入してください',
             'note.string' => '備考は文字列で入力してください',
             'note.max' => '備考は255文字以内で入力してください',
             'break_times.array' => '休憩時間は配列形式で入力してください',
@@ -44,10 +71,24 @@ class CorrectionRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $attendance = Attendance::find($this->route('id'));
+            $isAdmin = $this->isAdminRequest();
 
-            if (!$attendance || $attendance->user_id !== Auth::id()) {
+            if (!$attendance) {
                 $validator->errors()->add('attendance', '無効な勤怠情報です');
                 return;
+            }
+
+            // 権限チェック
+            if ($isAdmin) {
+                if (!Auth::user()->canViewAttendance($attendance->user_id)) {
+                    $validator->errors()->add('attendance', '無効な勤怠情報です');
+                    return;
+                }
+            } else {
+                if ($attendance->user_id !== Auth::id()) {
+                    $validator->errors()->add('attendance', '無効な勤怠情報です');
+                    return;
+                }
             }
 
             $correctedClockIn = $this->corrected_clock_in ? trim($this->corrected_clock_in) : null;
@@ -67,23 +108,32 @@ class CorrectionRequest extends FormRequest
             $breakTimes = $this->break_times ?? [];
             $clockInTime = $correctedClockIn ? Carbon::parse($correctedClockIn) : null;
             $clockOutTime = $correctedClockOut ? Carbon::parse($correctedClockOut) : null;
+            
+            // 管理者の場合は既存の出退勤時刻も考慮（入力がない場合）
+            if ($isAdmin && !$clockInTime && $attendance->clock_in) {
+                $clockInTime = Carbon::parse($attendance->clock_in);
+            }
+            if ($isAdmin && !$clockOutTime && $attendance->clock_out) {
+                $clockOutTime = Carbon::parse($attendance->clock_out);
+            }
 
             // 有効な休憩時間を収集（開始時刻と終了時刻の両方が入力されているもの）
-            // 片方だけ入力されている場合はエラーを出力
             $validBreakTimes = [];
             foreach ($breakTimes as $index => $break) {
                 $breakStartValue = isset($break['break_start']) ? trim($break['break_start']) : '';
                 $breakEndValue = isset($break['break_end']) ? trim($break['break_end']) : '';
 
-                // 片方だけ入力されている場合はエラー
-                if (!empty($breakStartValue) && empty($breakEndValue)) {
-                    $validator->errors()->add("break_times.{$index}.break_end", '休憩終了時刻を入力してください');
-                    continue;
-                }
+                // 片方だけ入力されている場合はエラー（一般ユーザー用のみ）
+                if (!$isAdmin) {
+                    if (!empty($breakStartValue) && empty($breakEndValue)) {
+                        $validator->errors()->add("break_times.{$index}.break_end", '休憩終了時刻を入力してください');
+                        continue;
+                    }
 
-                if (empty($breakStartValue) && !empty($breakEndValue)) {
-                    $validator->errors()->add("break_times.{$index}.break_start", '休憩開始時刻を入力してください');
-                    continue;
+                    if (empty($breakStartValue) && !empty($breakEndValue)) {
+                        $validator->errors()->add("break_times.{$index}.break_start", '休憩開始時刻を入力してください');
+                        continue;
+                    }
                 }
 
                 // 両方空の場合はスキップ（新規休憩欄が空の場合）
@@ -91,12 +141,19 @@ class CorrectionRequest extends FormRequest
                     continue;
                 }
 
+                // 片方だけ入力されている場合（管理者用はスキップ）
+                if (empty($breakStartValue) || empty($breakEndValue)) {
+                    continue;
+                }
+
                 $breakStart = Carbon::parse($breakStartValue);
                 $breakEnd = Carbon::parse($breakEndValue);
 
-                // 各休憩の開始時刻 < 終了時刻のチェック
+                // 各休憩の開始時刻 < 終了時刻のチェック（一般ユーザー用のみ）
                 if ($breakEnd->lte($breakStart)) {
-                    $validator->errors()->add("break_times.{$index}.break_end", '休憩終了時刻は開始時刻より後に設定してください');
+                    if (!$isAdmin) {
+                        $validator->errors()->add("break_times.{$index}.break_end", '休憩終了時刻は開始時刻より後に設定してください');
+                    }
                     continue;
                 }
 
@@ -127,8 +184,8 @@ class CorrectionRequest extends FormRequest
                 }
             }
 
-            // 出勤時間と退勤時間の両方が入力されている場合の詳細チェック
-            if ($clockInTime && $clockOutTime) {
+            // 出勤時間と退勤時間の両方が入力されている場合の詳細チェック（一般ユーザー用のみ）
+            if ($clockInTime && $clockOutTime && !$isAdmin) {
                 // 休憩時間を時系列でソート（開始時刻でソート）
                 // これにより、休憩時間同士の重複・順序チェックが正確に行える
                 usort($validBreakTimes, function ($firstBreak, $secondBreak) {

@@ -41,7 +41,7 @@
                     <td>{{ $attendance->getTotalBreakTime() }}</td>
                     <td>{{ $attendance->getWorkTime() }}</td>
                     <td>
-                        <a href="#" class="detail-link">詳細</a>
+                        <a href="{{ route('admin.show', $attendance->id) }}" class="detail-link">詳細</a>
                     </td>
                 </tr>
             @endforeach

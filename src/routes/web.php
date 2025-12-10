@@ -67,5 +67,7 @@ Route::middleware(['auth'])->group(function () {
     // 管理者向け機能
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/attendance/list', [AdminController::class, 'index'])->name('index');
+        Route::get('/attendance/{id}', [AdminController::class, 'show'])->name('show');
+        Route::post('/attendance/{id}', [AdminController::class, 'update'])->name('update');
     });
 });

@@ -53,6 +53,10 @@ class AttendanceController extends Controller
             
             switch ($request->stamp_type) {
                 case 'clock_in':
+                    if ($attendance && $attendance->clock_in) {
+                        return back()->withErrors(['stamp_type' => '既に出勤しています']);
+                    }
+                    
                     if (!$attendance) {
                         $attendance = Attendance::create([
                             'user_id' => $user->id,
@@ -67,32 +71,47 @@ class AttendanceController extends Controller
                     break;
                     
                 case 'break_start':
-                    $activeBreak = BreakTime::where('attendance_id', $attendance->id)
-                        ->whereNotNull('break_start')
-                        ->whereNull('break_end')
-                        ->first();
-                    
-                    BreakTime::create([
-                        'attendance_id' => $attendance->id,
-                        'break_start' => $now->format('H:i:s'),
-                    ]);
-                    break;
-                    
                 case 'break_end':
+                case 'clock_out':
+                    if (!$attendance || !$attendance->clock_in) {
+                        return back()->withErrors(['stamp_type' => 'まだ出勤していません']);
+                    }
+                    
+                    if ($request->stamp_type !== 'break_end' && $attendance->clock_out) {
+                        return back()->withErrors(['stamp_type' => '既に退勤しています']);
+                    }
+                    
                     $activeBreak = BreakTime::where('attendance_id', $attendance->id)
                         ->whereNotNull('break_start')
                         ->whereNull('break_end')
                         ->first();
                     
-                    $activeBreak->update([
-                        'break_end' => $now->format('H:i:s'),
-                    ]);
-                    break;
-                    
-                case 'clock_out':
-                    $attendance->update([
-                        'clock_out' => $now->format('H:i:s'),
-                    ]);
+                    if ($request->stamp_type === 'break_start') {
+                        if ($activeBreak) {
+                            return back()->withErrors(['stamp_type' => '既に休憩中です']);
+                        }
+                        
+                        BreakTime::create([
+                            'attendance_id' => $attendance->id,
+                            'break_start' => $now->format('H:i:s'),
+                        ]);
+                    } elseif ($request->stamp_type === 'break_end') {
+                        if (!$activeBreak) {
+                            return back()->withErrors(['stamp_type' => '休憩中ではありません']);
+                        }
+                        
+                        $activeBreak->update([
+                            'break_end' => $now->format('H:i:s'),
+                        ]);
+                    } elseif ($request->stamp_type === 'clock_out') {
+                        if ($activeBreak) {
+                            return back()->withErrors(['stamp_type' => '休憩を終了してから退勤してください']);
+                        }
+                        
+                        $attendance->update([
+                            'clock_out' => $now->format('H:i:s'),
+                        ]);
+                    }
                     break;
             }
             
