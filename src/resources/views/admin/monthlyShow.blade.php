@@ -2,22 +2,23 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/list.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
 @endpush
 
-@section('title', '勤怠一覧 - CT_勤怠管理')
+@section('title', 'スタッフ別勤怠一覧 (管理者) - CT_勤怠管理')
 
 @section('content')
-<div class="container">
+<div class="container admin-container">
     <div class="title">
-        <span class="title-bar">|</span>勤怠一覧
+        <span class="title-bar">|</span> {{ $user->name }}さんの勤怠
     </div>
 
     <div class="navigation list-month-navigation">
-        <a href="{{ route('attendance.list', ['month' => $prevMonth]) }}" class="navigation-link">←前月</a>
+        <a href="{{ route('admin.list', ['id' => $user->id, 'month' => $prevMonth]) }}" class="navigation-link">←前月</a>
         <span class="navigation-current list-month-current">
             📅 {{ $currentMonth->format('Y/m') }}
         </span>
-        <a href="{{ route('attendance.list', ['month' => $nextMonth]) }}" class="navigation-link">翌月→</a>
+        <a href="{{ route('admin.list', ['id' => $user->id, 'month' => $nextMonth]) }}" class="navigation-link">翌月→</a>
     </div>
 
     <table class="table">
@@ -51,13 +52,17 @@
                     <td>{{ $attendance ? $attendance->getWorkTime() : '' }}</td>
                     <td>
                         @if($attendance)
-                            <a href="{{ route('attendance.show', $attendance->id) }}" class="detail-link">詳細</a>
+                            <a href="{{ route('admin.show', $attendance->id) }}" class="detail-link">詳細</a>
                         @endif
                     </td>
                 </tr>
             @endfor
         </tbody>
     </table>
+
+    <div class="list-csv-actions">
+        <a href="{{ route('admin.list', ['id' => $user->id, 'month' => $currentMonth->format('Y-m'), 'download' => 'csv']) }}" class="list-csv-button">CSV出力</a>
+    </div>
 </div>
 @endsection
 

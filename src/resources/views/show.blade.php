@@ -9,7 +9,7 @@
 @section('content')
 <div class="container">
     <div class="title">
-        <span class="title-bar">|</span> 勤怠詳細
+        <span class="title-bar">|</span>勤怠詳細
     </div>
 
     <form method="POST" action="{{ route('attendance.update', $attendance->id) }}" class="show-form" id="show-form">

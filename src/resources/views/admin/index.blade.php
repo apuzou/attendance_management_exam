@@ -9,7 +9,7 @@
 @section('content')
 <div class="container admin-container">
     <div class="title">
-        <span class="title-bar">|</span> {{ $currentDate->format('Y年n月j日') }}の勤怠
+        <span class="title-bar">|</span>{{ $currentDate->format('Y年n月j日') }}の勤怠
     </div>
 
     <div class="navigation admin-date-navigation">

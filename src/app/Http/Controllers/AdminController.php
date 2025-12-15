@@ -9,6 +9,7 @@ use App\Http\Requests\CorrectionRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Response;
 use Carbon\Carbon;
 
 class AdminController extends Controller
@@ -176,6 +177,113 @@ class AdminController extends Controller
             
             return back()->withErrors(['attendance' => '修正に失敗しました'])->withInput();
         }
+    }
+
+    public function staff()
+    {
+        $currentUser = Auth::user();
+        
+        // 全アクセス権限（department_code=1）の場合は全ユーザーを表示
+        // 部門アクセス権限（department_code!=1）の場合は同じ部門のメンバーを表示（自身も含む）
+        $query = User::query();
+        
+        if ($currentUser->hasDepartmentAccess()) {
+            // 同じ部門コードのユーザーを取得（自身も含む）
+            $query->where('department_code', $currentUser->department_code);
+        }
+        // 全アクセス権限の場合はフィルタリングなし（全ユーザーを表示）
+        
+        // 氏名とメールアドレスを表示（FN041）
+        $users = $query->select('id', 'name', 'email')
+            ->orderBy('id', 'asc')
+            ->get();
+        
+        return view('admin.staffList', [
+            'users' => $users,
+        ]);
+    }
+
+    public function list(Request $request, $id)
+    {
+        $currentUser = Auth::user();
+        
+        // 対象ユーザー取得
+        $targetUser = User::findOrFail($id);
+        
+        // 権限チェック（FN043）
+        if (!$currentUser->canViewAttendance($targetUser->id)) {
+            abort(403, 'アクセスが拒否されました');
+        }
+        
+        // 月パラメータから月を取得（デフォルトは当月）（FN044）
+        $month = $request->get('month', Carbon::now()->format('Y-m'));
+        $currentMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+        
+        // 指定ユーザーの指定月の勤怠情報取得（FN043）
+        $attendances = Attendance::where('user_id', $targetUser->id)
+            ->whereYear('date', $currentMonth->year)
+            ->whereMonth('date', $currentMonth->month)
+            ->with('breakTimes')
+            ->orderBy('date', 'asc')
+            ->get();
+        
+        // 前月・翌月の月（FN044）
+        $prevMonth = $currentMonth->copy()->subMonth()->format('Y-m');
+        $nextMonth = $currentMonth->copy()->addMonth()->format('Y-m');
+        
+        // CSV出力機能（FN045）
+        if ($request->get('download') === 'csv') {
+            $filename = 'attendance_' . $targetUser->id . '_' . $currentMonth->format('Ymd') . '.csv';
+            
+            // CSVデータ生成
+            $csvData = [];
+            $csvData[] = ['日付', '出勤時刻', '退勤時刻', '休憩時間', '実働時間'];
+            
+            $daysInMonth = $currentMonth->daysInMonth;
+            $firstDay = $currentMonth->copy()->startOfMonth();
+            
+            for ($day = 1; $day <= $daysInMonth; $day++) {
+                $currentDate = $firstDay->copy()->addDays($day - 1);
+                $attendance = $attendances->first(function ($att) use ($currentDate) {
+                    return $att->date->format('Y-m-d') === $currentDate->format('Y-m-d');
+                });
+                
+                $csvData[] = [
+                    $currentDate->format('Y-m-d'),
+                    $attendance && $attendance->clock_in ? date('H:i', strtotime($attendance->clock_in)) : '',
+                    $attendance && $attendance->clock_out ? date('H:i', strtotime($attendance->clock_out)) : '',
+                    $attendance ? $attendance->getTotalBreakTime() : '',
+                    $attendance ? $attendance->getWorkTime() : '',
+                ];
+            }
+            
+            // CSV出力（UTF-8 BOM付き）
+            $output = fopen('php://temp', 'r+');
+            
+            // UTF-8 BOMを追加
+            fwrite($output, "\xEF\xBB\xBF");
+            
+            foreach ($csvData as $row) {
+                fputcsv($output, $row);
+            }
+            
+            rewind($output);
+            $csvContent = stream_get_contents($output);
+            fclose($output);
+            
+            return Response::make($csvContent, 200, [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+        }
+        
+        return view('admin.monthlyShow', [
+            'user' => $targetUser,
+            'attendances' => $attendances,
+            'currentMonth' => $currentMonth,
+            'prevMonth' => $prevMonth,
+            'nextMonth' => $nextMonth,
+        ]);
     }
 }
 

@@ -26,7 +26,7 @@
                 <nav class="header__nav">
                     @if($isAdminLogin)
                         <a href="{{ route('admin.index') }}" class="header__nav-link">勤怠一覧</a>
-                        <a href="#" class="header__nav-link">スタッフ一覧</a>
+                        <a href="{{ route('admin.staff') }}" class="header__nav-link">スタッフ一覧</a>
                         <a href="{{ route('correction.index') }}" class="header__nav-link">申請一覧</a>
                     @else
                         <a href="{{ route('attendance.index') }}" class="header__nav-link">勤怠</a>

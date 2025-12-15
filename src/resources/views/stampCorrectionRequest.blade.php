@@ -9,7 +9,7 @@
 @section('content')
 <div class="container correction-container">
     <div class="title">
-        <span class="title-bar">|</span> 申請一覧
+        <span class="title-bar">|</span>申請一覧
     </div>
 
     <div class="correction-tabs">

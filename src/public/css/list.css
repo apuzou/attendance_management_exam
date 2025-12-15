@@ -4,3 +4,43 @@
     font-weight: 500;
     color: #666;
 }
+
+.list-csv-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 30px;
+    padding: 0 30px 30px 30px;
+}
+
+@media (max-width: 768px) {
+    .list-csv-actions {
+        padding: 0 15px 20px 15px;
+        margin-top: 20px;
+    }
+}
+
+.list-csv-button {
+    background-color: #000;
+    color: #fff;
+    padding: 8px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    display: inline-block;
+}
+
+@media (max-width: 768px) {
+    .list-csv-button {
+        width: 100%;
+        max-width: 200px;
+        text-align: center;
+        padding: 10px 20px;
+    }
+}
+
+.list-csv-button:hover {
+    background-color: #333;
+}

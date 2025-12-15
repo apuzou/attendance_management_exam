@@ -69,5 +69,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/attendance/list', [AdminController::class, 'index'])->name('index');
         Route::get('/attendance/{id}', [AdminController::class, 'show'])->name('show');
         Route::post('/attendance/{id}', [AdminController::class, 'update'])->name('update');
+        Route::get('/staff/list', [AdminController::class, 'staff'])->name('staff');
+        Route::get('/attendance/staff/{id}', [AdminController::class, 'list'])->name('list');
     });
 });
