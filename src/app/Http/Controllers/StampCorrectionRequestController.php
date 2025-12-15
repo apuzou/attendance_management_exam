@@ -97,8 +97,8 @@ class StampCorrectionRequestController extends Controller
             abort(403, 'アクセスが拒否されました');
         }
         
-        // 自身の承認が可能かチェック
-        $canApprove = $currentUser->canApproveOwnRequest() || $correctionRequest->user_id !== $currentUser->id;
+        // 自身の承認が可能かチェック（アクセスしているユーザーIDが現在のユーザーIDと同じ場合は承認不可）
+        $canApprove = $correctionRequest->user_id !== $currentUser->id;
         
         // 既に承認済みかチェック
         $isApproved = !is_null($correctionRequest->approved_at);
@@ -136,8 +136,8 @@ class StampCorrectionRequestController extends Controller
             return back()->withErrors(['request' => 'この申請は既に承認済みです'])->withInput();
         }
         
-        // 自身の承認ができない場合はエラー
-        if (!$currentUser->canApproveOwnRequest() && $correctionRequest->user_id === $currentUser->id) {
+        // アクセスしているユーザーIDが現在のユーザーIDと同じ場合は承認不可
+        if ($correctionRequest->user_id === $currentUser->id) {
             abort(403, '自身の申請を承認することはできません');
         }
         

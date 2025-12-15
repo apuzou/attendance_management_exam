@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\User;
 use App\Models\StampCorrectionRequest;
+use App\Models\BreakCorrectionRequest;
 use App\Http\Requests\CorrectionRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -105,6 +106,12 @@ class AdminController extends Controller
             abort(403, 'アクセスが拒否されました');
         }
         
+        // 部門アクセス権限の管理者が自身の勤怠を修正する場合は申請として扱う
+        // フルアクセス権限の管理者は自身の直接修正が可能
+        if ($currentUser->role === 'admin' && $attendance->user_id === $currentUser->id && !$currentUser->hasFullAccess()) {
+            return $this->createCorrectionRequest($request, $attendance);
+        }
+        
         // 承認待ちの修正申請がある場合は編集不可（FN038）
         $pendingRequest = StampCorrectionRequest::where('attendance_id', $attendance->id)
             ->whereNull('approved_at')
@@ -176,6 +183,76 @@ class AdminController extends Controller
             DB::rollBack();
             
             return back()->withErrors(['attendance' => '修正に失敗しました'])->withInput();
+        }
+    }
+
+    /**
+     * 管理者が自身の勤怠を修正する場合は申請として作成
+     */
+    private function createCorrectionRequest(CorrectionRequest $request, Attendance $attendance)
+    {
+        $currentUser = Auth::user();
+        
+        // 承認待ちの修正申請がある場合は編集不可
+        $pendingRequest = StampCorrectionRequest::where('attendance_id', $attendance->id)
+            ->whereNull('approved_at')
+            ->first();
+        
+        if ($pendingRequest) {
+            return back()->withErrors(['note' => '承認待ちのため修正はできません。'])->withInput();
+        }
+        
+        DB::beginTransaction();
+        
+        try {
+            $correctedClockIn = $request->filled('corrected_clock_in') && trim($request->corrected_clock_in) !== '' ? trim($request->corrected_clock_in) : null;
+            $correctedClockOut = $request->filled('corrected_clock_out') && trim($request->corrected_clock_out) !== '' ? trim($request->corrected_clock_out) : null;
+            
+            // 修正申請を作成
+            $stampRequest = StampCorrectionRequest::create([
+                'attendance_id' => $attendance->id,
+                'user_id' => $currentUser->id,
+                'request_date' => Carbon::today()->toDateString(),
+                'original_clock_in' => $attendance->clock_in,
+                'original_clock_out' => $attendance->clock_out,
+                'corrected_clock_in' => $correctedClockIn ? Carbon::createFromFormat('H:i', $correctedClockIn)->format('H:i:s') : null,
+                'corrected_clock_out' => $correctedClockOut ? Carbon::createFromFormat('H:i', $correctedClockOut)->format('H:i:s') : null,
+                'note' => trim($request->note),
+            ]);
+            
+            // 休憩時間の修正申請を作成
+            $breakTimes = $request->break_times ?? [];
+            
+            foreach ($breakTimes as $break) {
+                $breakStart = isset($break['break_start']) && trim($break['break_start']) !== '' ? trim($break['break_start']) : null;
+                $breakEnd = isset($break['break_end']) && trim($break['break_end']) !== '' ? trim($break['break_end']) : null;
+                
+                if (!$breakStart || !$breakEnd) {
+                    continue;
+                }
+                
+                $existingBreak = null;
+                if (isset($break['id']) && !empty($break['id'])) {
+                    $existingBreak = $attendance->breakTimes->where('id', $break['id'])->first();
+                }
+                
+                BreakCorrectionRequest::create([
+                    'stamp_correction_request_id' => $stampRequest->id,
+                    'break_time_id' => $existingBreak ? $existingBreak->id : null,
+                    'original_break_start' => $existingBreak ? $existingBreak->break_start : null,
+                    'original_break_end' => $existingBreak ? $existingBreak->break_end : null,
+                    'corrected_break_start' => Carbon::createFromFormat('H:i', $breakStart)->format('H:i:s'),
+                    'corrected_break_end' => Carbon::createFromFormat('H:i', $breakEnd)->format('H:i:s'),
+                ]);
+            }
+            
+            DB::commit();
+            
+            return redirect()->route('admin.show', $attendance->id)->with('success', '修正申請を提出しました');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return back()->withErrors(['attendance' => '修正申請の作成に失敗しました'])->withInput();
         }
     }
 

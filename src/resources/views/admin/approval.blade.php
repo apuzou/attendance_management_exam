@@ -104,13 +104,17 @@
             </tbody>
         </table>
 
-        @if($canApprove)
+        @if($isApproved)
+            <div class="show-actions">
+                <button type="button" class="show-submit-button" disabled>承認済み</button>
+            </div>
+        @elseif($canApprove)
             <div class="show-actions">
                 <button type="submit" class="show-submit-button">承認</button>
             </div>
         @else
-            <div class="show-actions">
-                <button type="button" class="show-submit-button" disabled>承認済み</button>
+            <div class="show-error-message">
+                *承認待ちのため修正はできません。
             </div>
         @endif
     </form>
