@@ -1,37 +1,20 @@
 /* 勤怠詳細画面スタイル */
 
 .show-form {
-    padding: 0 30px;
     border-radius: 8px;
     margin-bottom: 0;
     letter-spacing: 0.1em;
 }
 
-@media (min-width: 1400px) and (max-width: 1540px) {
-    .show-form {
-        padding: 0 20px;
-    }
-}
-
-@media (max-width: 1024px) {
-    .show-form {
-        padding: 0 20px;
-    }
-}
-
-@media (max-width: 768px) {
-    .show-form {
-        padding: 0 15px;
-    }
-}
-
 .show-table {
-    width: calc(100% + 60px);
-    margin: 0 -30px;
+    width: 100%;
+    margin: 0;
     background-color: #fff;
     border-collapse: separate;
     border-spacing: 0;
     table-layout: auto;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 @media (min-width: 1400px) and (max-width: 1540px) {
@@ -84,8 +67,17 @@
     }
 }
 
+.show-table tbody tr:first-child .show-label-cell {
+    border-top-left-radius: 8px;
+}
+
+.show-table tbody tr:first-child .show-value-cell {
+    border-top-right-radius: 8px;
+}
+
 .show-table tbody tr:last-child .show-label-cell {
     border-bottom: none;
+    border-bottom-left-radius: 8px;
 }
 
 .show-value-cell {
@@ -108,6 +100,7 @@
 
 .show-table tbody tr:last-child .show-value-cell {
     border-bottom: none;
+    border-bottom-right-radius: 8px;
 }
 
 .show-value {
