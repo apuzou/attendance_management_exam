@@ -43,7 +43,11 @@
                             <td>{{ $request->note }}</td>
                             <td>{{ $request->request_date->format('Y/m/d') }}</td>
                             <td>
-                                <a href="{{ route('attendance.show', $request->attendance_id) }}" class="detail-link">詳細</a>
+                                @if($isAdmin)
+                                    <a href="{{ route('correction.approve', $request->id) }}" class="detail-link">詳細</a>
+                                @else
+                                    <a href="{{ route('attendance.show', $request->attendance_id) }}" class="detail-link">詳細</a>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -78,7 +82,11 @@
                             <td>{{ $request->note }}</td>
                             <td>{{ $request->request_date->format('Y/m/d') }}</td>
                             <td>
-                                <a href="{{ route('attendance.show', $request->attendance_id) }}" class="detail-link">詳細</a>
+                                @if($isAdmin)
+                                    <a href="{{ route('correction.approve', $request->id) }}" class="detail-link">詳細</a>
+                                @else
+                                    <a href="{{ route('attendance.show', $request->attendance_id) }}" class="detail-link">詳細</a>
+                                @endif
                             </td>
                         </tr>
                     @endforeach

@@ -62,6 +62,10 @@ Route::middleware(['auth'])->group(function () {
         // 修正申請
         Route::get('/stamp_correction_request/list', [StampCorrectionRequestController::class, 'index'])
             ->name('correction.index');
+        Route::get('/stamp_correction_request/approve/{id}', [StampCorrectionRequestController::class, 'show'])
+            ->name('correction.approve');
+        Route::post('/stamp_correction_request/approve/{id}', [StampCorrectionRequestController::class, 'update'])
+            ->name('correction.approve');
     });
 
     // 管理者向け機能

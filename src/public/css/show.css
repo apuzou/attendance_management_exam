@@ -284,6 +284,15 @@
     background-color: #333;
 }
 
+.show-submit-button:disabled {
+    background-color: #666;
+    cursor: not-allowed;
+}
+
+.show-submit-button:disabled:hover {
+    background-color: #666;
+}
+
 .show-error-message {
     color: #c00;
     text-align: right;
