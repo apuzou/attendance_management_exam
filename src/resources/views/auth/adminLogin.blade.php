@@ -10,8 +10,9 @@
 <div class="container auth-container">
     <h2 class="auth-title">管理者ログイン</h2>
 
-    <form method="POST" action="{{ route('admin.login') }}" class="auth-form">
+    <form method="POST" action="{{ route('login') }}" class="auth-form">
         @csrf
+        <input type="hidden" name="is_admin_login" value="1">
 
         <div class="auth-field">
             <label for="email" class="auth-label">メールアドレス</label>

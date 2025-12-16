@@ -15,6 +15,10 @@ use Carbon\Carbon;
 
 class AdminController extends Controller
 {
+    /**
+     * コンストラクタ
+     * 管理者権限チェックのミドルウェアを適用
+     */
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
@@ -25,36 +29,37 @@ class AdminController extends Controller
         });
     }
 
+    /**
+     * 管理者の勤怠一覧画面を表示
+     * 指定日の出勤者一覧を表示（権限に応じてフィルタリング）
+     */
     public function index(Request $request)
     {
         $currentUser = Auth::user();
-        
+
         // 日付パラメータから日付を取得（デフォルトは今日）
         $dateParam = $request->get('date', Carbon::today()->format('Y-m-d'));
         $currentDate = Carbon::parse($dateParam)->startOfDay();
-        
+
         // 該当日に出勤を打刻した勤怠情報を取得
         $query = Attendance::where('date', $currentDate->toDateString())
             ->whereNotNull('clock_in')
             ->with(['user', 'breakTimes']);
-        
+
         // 全アクセス権限（department_code=1）の場合は全員の勤怠を表示
-        // 部門アクセス権限（department_code!=1）の場合は同じ部門のメンバーの勤怠のみ表示
+        // 部門アクセス権限（department_code!=1）の場合は同じ部門スタッフの勤怠のみ表示
         if ($currentUser->hasDepartmentAccess()) {
-            // 同じ部門コードのユーザーIDを取得
             $sameDepartmentUserIds = User::where('department_code', $currentUser->department_code)
                 ->pluck('id');
-            
+
             $query->whereIn('user_id', $sameDepartmentUserIds);
         }
-        // 全アクセス権限の場合はフィルタリングなし（全員の勤怠を表示）
-        
+
         $attendances = $query->orderBy('user_id', 'asc')->get();
-        
-        // 前日・翌日の日付
+
         $prevDate = $currentDate->copy()->subDay()->format('Y-m-d');
         $nextDate = $currentDate->copy()->addDay()->format('Y-m-d');
-        
+
         return view('admin.index', [
             'attendances' => $attendances,
             'currentDate' => $currentDate,
@@ -63,26 +68,31 @@ class AdminController extends Controller
         ]);
     }
 
+    /**
+     * 管理者の勤怠詳細画面を表示
+     * 指定された勤怠情報を取得し、承認待ちの修正申請があるかチェックして編集可否を判定
+     */
     public function show($id)
     {
         $currentUser = Auth::user();
         
-        // 勤怠レコード取得（FN037）
+        // 勤怠レコード取得（ユーザー情報、休憩時間、修正申請も一緒に取得）
         $attendance = Attendance::where('id', $id)
             ->with(['user', 'breakTimes', 'stampCorrectionRequests'])
             ->firstOrFail();
         
-        // 権限チェック（FN037）
+        // 権限チェック（管理者が閲覧可能な勤怠かどうか）
         if (!$currentUser->canViewAttendance($attendance->user_id)) {
             abort(403, 'アクセスが拒否されました');
         }
         
-        // 承認待ちの修正申請があるかチェック（FN038）
+        // 承認待ちの修正申請があるかチェック
         $pendingRequest = StampCorrectionRequest::where('attendance_id', $attendance->id)
             ->whereNull('approved_at')
             ->with('breakCorrectionRequests')
             ->first();
         
+        // 承認待ちの申請がない場合のみ編集可能
         $canEdit = is_null($pendingRequest);
         
         return view('admin.dailyShow', [
@@ -92,19 +102,20 @@ class AdminController extends Controller
         ]);
     }
 
+    /**
+     * 管理者による勤怠情報の直接修正
+     * フルアクセス権限の管理者は自身の勤怠も直接修正可能
+     * 部門アクセス権限の管理者が自身の勤怠を修正する場合は申請として扱う
+     * 認可チェックはCorrectionRequestのauthorize()で行われる
+     */
     public function update(CorrectionRequest $request, $id)
     {
         $currentUser = Auth::user();
         
-        // 勤怠レコード取得
+        // 勤怠レコード取得（休憩時間も一緒に取得）
         $attendance = Attendance::where('id', $id)
             ->with(['breakTimes'])
             ->firstOrFail();
-        
-        // 権限チェック
-        if (!$currentUser->canViewAttendance($attendance->user_id)) {
-            abort(403, 'アクセスが拒否されました');
-        }
         
         // 部門アクセス権限の管理者が自身の勤怠を修正する場合は申請として扱う
         // フルアクセス権限の管理者は自身の直接修正が可能
@@ -112,19 +123,12 @@ class AdminController extends Controller
             return $this->createCorrectionRequest($request, $attendance);
         }
         
-        // 承認待ちの修正申請がある場合は編集不可（FN038）
-        $pendingRequest = StampCorrectionRequest::where('attendance_id', $attendance->id)
-            ->whereNull('approved_at')
-            ->first();
-        
-        if ($pendingRequest) {
-            return back()->withErrors(['note' => '承認待ちのため修正はできません。'])->withInput();
-        }
+        // 承認待ちチェックはCorrectionRequestのwithValidator()で行われる
         
         DB::beginTransaction();
         
         try {
-            // 出勤・退勤時刻の更新（FN040）
+            // 出勤・退勤時刻の更新（入力がない場合は既存の値を維持）
             $correctedClockIn = $request->filled('corrected_clock_in') && trim($request->corrected_clock_in) !== '' 
                 ? Carbon::createFromFormat('H:i', trim($request->corrected_clock_in))->format('H:i:s') 
                 : $attendance->clock_in;
@@ -133,6 +137,7 @@ class AdminController extends Controller
                 ? Carbon::createFromFormat('H:i', trim($request->corrected_clock_out))->format('H:i:s') 
                 : $attendance->clock_out;
             
+            // 勤怠レコードを更新（最終更新者・最終更新日時も記録）
             $attendance->update([
                 'clock_in' => $correctedClockIn,
                 'clock_out' => $correctedClockOut,
@@ -141,14 +146,15 @@ class AdminController extends Controller
                 'last_modified_at' => Carbon::now(),
             ]);
             
-            // 休憩時間の更新（FN040）
+            // 休憩時間の更新
             $breakTimes = $request->break_times ?? [];
-            $existingBreakIds = [];
+            $existingBreakIds = []; // 更新・作成された休憩時間のIDを保持
             
             foreach ($breakTimes as $break) {
                 $breakStart = isset($break['break_start']) && trim($break['break_start']) !== '' ? trim($break['break_start']) : null;
                 $breakEnd = isset($break['break_end']) && trim($break['break_end']) !== '' ? trim($break['break_end']) : null;
                 
+                // 開始時刻と終了時刻の両方が入力されている場合のみ処理
                 if (!$breakStart || !$breakEnd) {
                     continue;
                 }
@@ -173,7 +179,7 @@ class AdminController extends Controller
                 }
             }
             
-            // 削除された休憩時間を削除
+            // 更新・作成された休憩時間に含まれない既存の休憩時間を削除
             $attendance->breakTimes()->whereNotIn('id', $existingBreakIds)->delete();
             
             DB::commit();
@@ -188,27 +194,21 @@ class AdminController extends Controller
 
     /**
      * 管理者が自身の勤怠を修正する場合は申請として作成
+     * 部門アクセス権限の管理者が自身の勤怠を修正する場合に使用
+     * 承認待ちチェックはCorrectionRequestのwithValidator()で行われる
      */
     private function createCorrectionRequest(CorrectionRequest $request, Attendance $attendance)
     {
         $currentUser = Auth::user();
         
-        // 承認待ちの修正申請がある場合は編集不可
-        $pendingRequest = StampCorrectionRequest::where('attendance_id', $attendance->id)
-            ->whereNull('approved_at')
-            ->first();
-        
-        if ($pendingRequest) {
-            return back()->withErrors(['note' => '承認待ちのため修正はできません。'])->withInput();
-        }
-        
         DB::beginTransaction();
         
         try {
+            // 修正後の出勤・退勤時刻を取得
             $correctedClockIn = $request->filled('corrected_clock_in') && trim($request->corrected_clock_in) !== '' ? trim($request->corrected_clock_in) : null;
             $correctedClockOut = $request->filled('corrected_clock_out') && trim($request->corrected_clock_out) !== '' ? trim($request->corrected_clock_out) : null;
             
-            // 修正申請を作成
+            // 修正申請レコードを作成（元の値と修正後の値を保存）
             $stampRequest = StampCorrectionRequest::create([
                 'attendance_id' => $attendance->id,
                 'user_id' => $currentUser->id,
@@ -227,18 +227,21 @@ class AdminController extends Controller
                 $breakStart = isset($break['break_start']) && trim($break['break_start']) !== '' ? trim($break['break_start']) : null;
                 $breakEnd = isset($break['break_end']) && trim($break['break_end']) !== '' ? trim($break['break_end']) : null;
                 
+                // 開始時刻と終了時刻の両方が入力されている場合のみ処理
                 if (!$breakStart || !$breakEnd) {
                     continue;
                 }
                 
+                // 既存の休憩時間かどうかを判定
                 $existingBreak = null;
                 if (isset($break['id']) && !empty($break['id'])) {
                     $existingBreak = $attendance->breakTimes->where('id', $break['id'])->first();
                 }
                 
+                // 休憩時間の修正申請を作成（既存の休憩の修正か新規追加かをbreak_time_idで判定）
                 BreakCorrectionRequest::create([
                     'stamp_correction_request_id' => $stampRequest->id,
-                    'break_time_id' => $existingBreak ? $existingBreak->id : null,
+                    'break_time_id' => $existingBreak ? $existingBreak->id : null, // nullの場合は新規追加
                     'original_break_start' => $existingBreak ? $existingBreak->break_start : null,
                     'original_break_end' => $existingBreak ? $existingBreak->break_end : null,
                     'corrected_break_start' => Carbon::createFromFormat('H:i', $breakStart)->format('H:i:s'),
@@ -256,6 +259,10 @@ class AdminController extends Controller
         }
     }
 
+    /**
+     * 管理者のスタッフ一覧画面を表示
+     * 権限に応じて管轄するスタッフの一覧を表示（自身も含む）
+     */
     public function staff()
     {
         $currentUser = Auth::user();
@@ -270,7 +277,7 @@ class AdminController extends Controller
         }
         // 全アクセス権限の場合はフィルタリングなし（全ユーザーを表示）
         
-        // 氏名とメールアドレスを表示（FN041）
+        // 一般ユーザーの氏名とメールアドレスを表示
         $users = $query->select('id', 'name', 'email')
             ->orderBy('id', 'asc')
             ->get();
@@ -280,6 +287,10 @@ class AdminController extends Controller
         ]);
     }
 
+    /**
+     * 管理者のスタッフ別月次勤怠一覧画面を表示
+     * 指定されたスタッフの指定月の勤怠情報を表示し、CSV出力も可能
+     */
     public function list(Request $request, $id)
     {
         $currentUser = Auth::user();
@@ -287,16 +298,16 @@ class AdminController extends Controller
         // 対象ユーザー取得
         $targetUser = User::findOrFail($id);
         
-        // 権限チェック（FN043）
+        // 権限チェック（管理者が閲覧可能なユーザーかどうか）
         if (!$currentUser->canViewAttendance($targetUser->id)) {
             abort(403, 'アクセスが拒否されました');
         }
         
-        // 月パラメータから月を取得（デフォルトは当月）（FN044）
+        // 月パラメータから月を取得（デフォルトは当月）
         $month = $request->get('month', Carbon::now()->format('Y-m'));
         $currentMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
         
-        // 指定ユーザーの指定月の勤怠情報取得（FN043）
+        // 指定ユーザーの指定月の勤怠情報取得（休憩時間も一緒に取得）
         $attendances = Attendance::where('user_id', $targetUser->id)
             ->whereYear('date', $currentMonth->year)
             ->whereMonth('date', $currentMonth->month)
@@ -304,11 +315,11 @@ class AdminController extends Controller
             ->orderBy('date', 'asc')
             ->get();
         
-        // 前月・翌月の月（FN044）
+        // 前月・翌月の月（ナビゲーション用）
         $prevMonth = $currentMonth->copy()->subMonth()->format('Y-m');
         $nextMonth = $currentMonth->copy()->addMonth()->format('Y-m');
         
-        // CSV出力機能（FN045）
+        // CSV出力機能（downloadパラメータがcsvの場合）
         if ($request->get('download') === 'csv') {
             $filename = 'attendance_' . $targetUser->id . '_' . $currentMonth->format('Ymd') . '.csv';
             

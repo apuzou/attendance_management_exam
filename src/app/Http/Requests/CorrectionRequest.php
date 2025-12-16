@@ -3,14 +3,21 @@
 namespace App\Http\Requests;
 
 use App\Models\Attendance;
+use App\Models\StampCorrectionRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
+/**
+ * 修正申請リクエスト
+ * 出勤・退勤時刻や休憩時間の修正申請のバリデーションを行う
+ * 管理者による直接修正と一般ユーザーによる申請の両方に対応
+ */
 class CorrectionRequest extends FormRequest
 {
     /**
      * 管理者による修正かどうかを判定
+     * ルート名がadmin.updateの場合は管理者による修正
      */
     protected function isAdminRequest(): bool
     {
@@ -24,6 +31,10 @@ class CorrectionRequest extends FormRequest
         return $routeName === 'admin.update';
     }
 
+    /**
+     * リクエストの認可を判定
+     * 管理者の場合は権限チェック、一般ユーザーの場合は自分の勤怠のみ許可
+     */
     public function authorize()
     {
         $attendance = Attendance::find($this->route('id'));
@@ -32,15 +43,24 @@ class CorrectionRequest extends FormRequest
             return false;
         }
         
-        // 管理者の場合は権限チェック
+        // 管理者の場合は権限チェック（管轄する部門の勤怠かどうか）
         if ($this->isAdminRequest()) {
             return Auth::user()->canViewAttendance($attendance->user_id);
         }
         
-        // 一般ユーザーの場合は自分の勤怠のみ
+        // 一般ユーザーの場合は自分の勤怠のみ許可
         return $attendance->user_id === Auth::id();
     }
 
+    /**
+     * バリデーションルール
+     * corrected_clock_in: 修正後出勤時刻（H:i形式、任意）
+     * corrected_clock_out: 修正後退勤時刻（H:i形式、任意）
+     * note: 備考（必須、最大255文字）
+     * break_times: 休憩時間の配列（任意）
+     * break_times.*.break_start: 休憩開始時刻（H:i形式、任意）
+     * break_times.*.break_end: 休憩終了時刻（H:i形式、任意）
+     */
     public function rules()
     {
         return [
@@ -53,6 +73,9 @@ class CorrectionRequest extends FormRequest
         ];
     }
 
+    /**
+     * バリデーションエラーメッセージ
+     */
     public function messages()
     {
         return [
@@ -67,18 +90,24 @@ class CorrectionRequest extends FormRequest
         ];
     }
 
+    /**
+     * カスタムバリデーションロジック
+     * 出勤・退勤時刻の整合性、休憩時間の整合性をチェック
+     * 管理者と一般ユーザーで異なるバリデーションルールを適用
+     */
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
             $attendance = Attendance::find($this->route('id'));
             $isAdmin = $this->isAdminRequest();
 
+            // 勤怠レコードが存在しない場合はエラー
             if (!$attendance) {
                 $validator->errors()->add('attendance', '無効な勤怠情報です');
                 return;
             }
 
-            // 権限チェック
+            // 権限チェック（管理者は管轄部門の勤怠、一般ユーザーは自分の勤怠のみ）
             if ($isAdmin) {
                 if (!Auth::user()->canViewAttendance($attendance->user_id)) {
                     $validator->errors()->add('attendance', '無効な勤怠情報です');
@@ -91,6 +120,17 @@ class CorrectionRequest extends FormRequest
                 }
             }
 
+            // 承認待ちの修正申請がある場合は新規申請不可
+            $pendingRequest = StampCorrectionRequest::where('attendance_id', $attendance->id)
+                ->whereNull('approved_at')
+                ->first();
+            
+            if ($pendingRequest) {
+                $validator->errors()->add('note', '承認待ちのため修正はできません。');
+                return;
+            }
+
+            // 修正後の出勤・退勤時刻を取得（空文字の場合はnull）
             $correctedClockIn = $this->corrected_clock_in ? trim($this->corrected_clock_in) : null;
             $correctedClockOut = $this->corrected_clock_out ? trim($this->corrected_clock_out) : null;
 

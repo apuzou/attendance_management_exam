@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Attendance;
 use App\Models\BreakTime;
 use App\Models\BreakCorrectionRequest;
+use App\Http\Requests\ApprovalRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,12 +15,17 @@ use Carbon\Carbon;
 
 class StampCorrectionRequestController extends Controller
 {
+    /**
+     * 申請一覧画面を表示
+     * 管理者の場合は管轄する部門の申請を表示
+     * 一般ユーザーの場合は自分の申請のみ表示
+     */
     public function index(Request $request)
     {
         $user = Auth::user();
-        $tab = $request->get('tab', 'pending');
+        $tab = $request->get('tab', 'pending'); // タブ選択状態（承認待ち/承認済み）
         
-        // 管理者の場合は管轄する部門の申請を表示（FN047, FN048）
+        // 管理者の場合は管轄する部門の申請を表示
         if ($user->role === 'admin') {
             $query = StampCorrectionRequest::query();
             
@@ -78,16 +84,20 @@ class StampCorrectionRequestController extends Controller
         ]);
     }
 
+    /**
+     * 修正申請承認画面を表示（FN050）
+     * 申請詳細情報を表示し、承認可否を判定
+     */
     public function show($id)
     {
         $currentUser = Auth::user();
         
-        // 修正申請レコード取得（FN050）
+        // 修正申請レコード取得（関連する勤怠情報、申請者情報、休憩修正申請も一緒に取得）
         $correctionRequest = StampCorrectionRequest::where('id', $id)
             ->with(['attendance.user', 'attendance.breakTimes', 'user', 'breakCorrectionRequests'])
             ->firstOrFail();
         
-        // 権限チェック（管理者のみ）
+        // 権限チェック（管理者のみ承認画面にアクセス可能）
         if ($currentUser->role !== 'admin') {
             abort(403, 'アクセスが拒否されました');
         }
@@ -107,47 +117,32 @@ class StampCorrectionRequestController extends Controller
             'request' => $correctionRequest,
             'attendance' => $correctionRequest->attendance,
             'user' => $correctionRequest->user,
-            'canApprove' => $canApprove && !$isApproved,
+            'canApprove' => $canApprove && !$isApproved, // 自身の申請でない、かつ未承認の場合のみ承認可能
             'isApproved' => $isApproved,
         ]);
     }
 
-    public function update(Request $request, $id)
+    /**
+     * 修正申請を承認
+     * 申請内容を勤怠レコードに反映し、承認状態を更新
+     * 認可チェックとバリデーションはApprovalRequestで行われる
+     */
+    public function update(ApprovalRequest $request, $id)
     {
         $currentUser = Auth::user();
         
-        // 修正申請レコード取得
+        // 修正申請レコード取得（関連する勤怠情報、休憩修正申請も一緒に取得）
         $correctionRequest = StampCorrectionRequest::where('id', $id)
             ->with(['attendance.breakTimes', 'breakCorrectionRequests'])
             ->firstOrFail();
         
-        // 権限チェック（管理者のみ）
-        if ($currentUser->role !== 'admin') {
-            abort(403, 'アクセスが拒否されました');
-        }
-        
-        // 管理者が管轄する部門の申請のみ承認可能
-        if (!$currentUser->canViewAttendance($correctionRequest->user_id)) {
-            abort(403, 'アクセスが拒否されました');
-        }
-        
-        // 既に承認済みの場合はエラー
-        if (!is_null($correctionRequest->approved_at)) {
-            return back()->withErrors(['request' => 'この申請は既に承認済みです'])->withInput();
-        }
-        
-        // アクセスしているユーザーIDが現在のユーザーIDと同じ場合は承認不可
-        if ($correctionRequest->user_id === $currentUser->id) {
-            abort(403, '自身の申請を承認することはできません');
-        }
-        
         DB::beginTransaction();
         
         try {
-            // 勤怠レコードの更新（FN051-2）
+            // 勤怠レコードの更新
             $attendance = $correctionRequest->attendance;
             
-            // 出勤・退勤時刻の更新
+            // 出勤・退勤時刻の更新（修正申請に記載がある場合のみ更新）
             if ($correctionRequest->corrected_clock_in) {
                 $attendance->clock_in = Carbon::createFromFormat('H:i:s', $correctionRequest->corrected_clock_in)->format('H:i:s');
             }
@@ -155,17 +150,18 @@ class StampCorrectionRequestController extends Controller
                 $attendance->clock_out = Carbon::createFromFormat('H:i:s', $correctionRequest->corrected_clock_out)->format('H:i:s');
             }
             
-            // 備考の更新
+            // 備考の更新（修正申請に記載がある場合のみ更新）
             if ($correctionRequest->note) {
                 $attendance->note = $correctionRequest->note;
             }
             
+            // 最終更新者・最終更新日時を記録
             $attendance->last_modified_by = $currentUser->id;
             $attendance->last_modified_at = Carbon::now();
             $attendance->save();
             
             // 休憩時間の更新
-            $existingBreakIds = [];
+            $existingBreakIds = []; // 更新・作成された休憩時間のIDを保持
             foreach ($correctionRequest->breakCorrectionRequests as $breakCorrectionRequest) {
                 if ($breakCorrectionRequest->break_time_id) {
                     // 既存の休憩時間を更新
@@ -190,7 +186,7 @@ class StampCorrectionRequestController extends Controller
             // 修正申請にない既存の休憩時間は削除しない（修正申請で指定されていないものはそのまま残す）
             // これは要件による。もし削除が必要な場合は、修正申請に削除フラグを追加する必要がある
             
-            // 修正申請の承認状態を更新（FN051-1, FN051-3）
+            // 修正申請の承認状態を更新（承認者・承認日時を記録）
             $correctionRequest->approved_by = $currentUser->id;
             $correctionRequest->approved_at = Carbon::now();
             $correctionRequest->save();

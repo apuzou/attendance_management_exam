@@ -4,13 +4,25 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * 一般ユーザーログインリクエスト
+ * ログイン処理のバリデーションを行う
+ */
 class LoginRequest extends FormRequest
 {
+    /**
+     * リクエストの認可を判定（ゲストもログイン可能）
+     */
     public function authorize()
     {
         return true;
     }
 
+    /**
+     * バリデーションルール
+     * email: メールアドレス（必須、メール形式、最大255文字）
+     * password: パスワード（必須、文字列）
+     */
     public function rules()
     {
         return [
@@ -19,6 +31,9 @@ class LoginRequest extends FormRequest
         ];
     }
 
+    /**
+     * バリデーションエラーメッセージ
+     */
     public function messages()
     {
         return [

@@ -8,10 +8,19 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ * ユーザーモデル
+ * 一般ユーザーと管理者の両方に対応
+ * role: 'general'（一般ユーザー）または 'admin'（管理者）
+ * department_code: 部門コード（1=フルアクセス権限、2以降=部門コード）
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    /**
+     * 一括代入可能な属性
+     */
     protected $fillable = [
         'name',
         'email',
@@ -23,22 +32,34 @@ class User extends Authenticatable implements MustVerifyEmail
         'verification_code_expires_at',
     ];
 
+    /**
+     * シリアライズ時に非表示にする属性
+     */
     protected $hidden = [
         'password',
         'remember_token',
         'verification_code',
     ];
 
+    /**
+     * 型変換を行う属性
+     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'verification_code_expires_at' => 'datetime',
     ];
 
+    /**
+     * 管理者かどうかを判定
+     */
     public function isAdmin()
     {
         return $this->role === 'admin';
     }
 
+    /**
+     * 一般ユーザーかどうかを判定
+     */
     public function isGeneral()
     {
         return $this->role === 'general';
