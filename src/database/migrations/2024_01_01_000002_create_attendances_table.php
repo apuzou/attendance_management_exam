@@ -18,7 +18,7 @@ class CreateAttendancesTable extends Migration
             $table->foreignId('last_modified_by')->nullable()->constrained('users')->nullOnDelete()->cascadeOnUpdate();
             $table->timestamp('last_modified_at')->nullable();
             $table->timestamps();
-            
+
             $table->unique(['user_id', 'date']);
         });
     }

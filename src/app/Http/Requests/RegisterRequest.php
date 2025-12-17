@@ -10,20 +10,11 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class RegisterRequest extends FormRequest
 {
-    /**
-     * リクエストの認可を判定（ゲストも登録可能）
-     */
     public function authorize()
     {
         return true;
     }
 
-    /**
-     * バリデーションルール
-     * name: 氏名（必須、最大255文字）
-     * email: メールアドレス（必須、メール形式、最大255文字、usersテーブルでユニーク）
-     * password: パスワード（必須、8文字以上、確認用パスワードと一致）
-     */
     public function rules()
     {
         return [
@@ -33,9 +24,6 @@ class RegisterRequest extends FormRequest
         ];
     }
 
-    /**
-     * バリデーションエラーメッセージ
-     */
     public function messages()
     {
         return [

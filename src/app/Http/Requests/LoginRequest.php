@@ -18,11 +18,6 @@ class LoginRequest extends FormRequest
         return true;
     }
 
-    /**
-     * バリデーションルール
-     * email: メールアドレス（必須、メール形式、最大255文字）
-     * password: パスワード（必須、文字列）
-     */
     public function rules()
     {
         return [
@@ -31,9 +26,6 @@ class LoginRequest extends FormRequest
         ];
     }
 
-    /**
-     * バリデーションエラーメッセージ
-     */
     public function messages()
     {
         return [
