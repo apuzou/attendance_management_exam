@@ -31,6 +31,14 @@
     }
 }
 
+@media (max-width: 480px) {
+    .navigation {
+        gap: 8px;
+        padding: 8px 10px;
+        margin-bottom: 20px;
+    }
+}
+
 .navigation-link {
     color: #666;
     text-decoration: none;
@@ -46,6 +54,16 @@
 @media (max-width: 768px) {
     .navigation-link {
         font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .navigation-link {
+        font-size: 12px;
+        padding: 6px 10px;
+        display: inline-block;
+        min-height: 36px;
+        line-height: 24px;
     }
 }
 
@@ -67,6 +85,12 @@
 @media (max-width: 768px) {
     .navigation-current {
         font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .navigation-current {
+        font-size: 12px;
     }
 }
 

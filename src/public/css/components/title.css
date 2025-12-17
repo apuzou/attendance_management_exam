@@ -18,6 +18,13 @@
     }
 }
 
+@media (max-width: 480px) {
+    .title {
+        font-size: 18px;
+        margin-bottom: 18px;
+    }
+}
+
 .title-bar {
     font-size: 32px;
     font-weight: bold;
@@ -39,5 +46,13 @@
         font-size: 24px;
         margin-bottom: 20px;
         margin-right: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .title-bar {
+        font-size: 20px;
+        margin-bottom: 18px;
+        margin-right: 8px;
     }
 }

@@ -38,6 +38,13 @@
         -webkit-overflow-scrolling: touch;
         width: 100%;
         margin: 0;
+        scrollbar-width: thin;
+    }
+}
+
+@media (max-width: 480px) {
+    .show-table {
+        border-radius: 4px;
     }
 }
 
@@ -64,6 +71,15 @@
         min-width: 100px;
         padding: 10px 10px;
         font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .show-label-cell {
+        width: 90px;
+        min-width: 90px;
+        padding: 8px 8px;
+        font-size: 12px;
     }
 }
 
@@ -98,6 +114,13 @@
     }
 }
 
+@media (max-width: 480px) {
+    .show-value-cell {
+        padding: 8px 8px;
+        font-size: 13px;
+    }
+}
+
 .show-table tbody tr:last-child .show-value-cell {
     border-bottom: none;
     border-bottom-right-radius: 8px;
@@ -127,6 +150,12 @@
     }
 }
 
+@media (max-width: 480px) {
+    .show-date-field {
+        gap: 8px;
+    }
+}
+
 .show-date-value {
     color: #333;
     text-align: center;
@@ -149,6 +178,12 @@
         flex-direction: column;
         gap: 10px;
         align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .show-time-field {
+        gap: 8px;
     }
 }
 
@@ -181,6 +216,15 @@
     }
 }
 
+@media (max-width: 480px) {
+    .show-time-input {
+        max-width: 100%;
+        padding: 8px;
+        font-size: 14px;
+        min-height: 40px;
+    }
+}
+
 .show-time-input:focus {
     outline: none;
     border-color: #9333ea;
@@ -198,6 +242,12 @@
     }
 }
 
+@media (max-width: 480px) {
+    .show-time-value {
+        font-size: 18px;
+    }
+}
+
 .show-time-separator {
     color: #000;
     font-size: 24px;
@@ -207,6 +257,13 @@
 @media (max-width: 768px) {
     .show-time-separator {
         font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .show-time-separator {
+        font-size: 18px;
+        margin: 0 4px;
     }
 }
 
@@ -234,6 +291,14 @@
     }
 }
 
+@media (max-width: 480px) {
+    .show-note-input {
+        font-size: 14px;
+        padding: 10px;
+        min-height: 80px;
+    }
+}
+
 .show-note-input:focus {
     outline: none;
     border-color: #9333ea;
@@ -254,6 +319,13 @@
     }
 }
 
+@media (max-width: 480px) {
+    .show-actions {
+        padding: 0 12px 15px 12px;
+        margin-top: 15px;
+    }
+}
+
 .show-submit-button {
     background-color: #000;
     color: #fff;
@@ -270,6 +342,15 @@
     .show-submit-button {
         width: 100%;
         max-width: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .show-submit-button {
+        max-width: 100%;
+        padding: 10px 20px;
+        font-size: 14px;
+        min-height: 44px;
     }
 }
 
@@ -304,6 +385,14 @@
     }
 }
 
+@media (max-width: 480px) {
+    .show-error-message {
+        padding: 0 12px 15px 12px;
+        margin-top: 15px;
+        font-size: 11px;
+    }
+}
+
 .show-errors {
     margin-top: 30px;
     padding: 0 30px 30px 30px;
@@ -315,6 +404,13 @@
     .show-errors {
         padding: 0 15px 20px 15px;
         margin-top: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .show-errors {
+        padding: 0 12px 15px 12px;
+        margin-top: 15px;
     }
 }
 
@@ -338,6 +434,13 @@
     }
 }
 
+@media (max-width: 480px) {
+    .show-field-error {
+        font-size: 11px;
+        padding-left: 8px;
+    }
+}
+
 .show-input-error {
     border-color: #c00;
 }
@@ -349,5 +452,11 @@
 @media (max-width: 768px) {
     .show-time-field + .show-field-error {
         padding-left: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .show-time-field + .show-field-error {
+        padding-left: 8px;
     }
 }

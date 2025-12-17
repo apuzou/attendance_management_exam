@@ -15,6 +15,12 @@
     }
 }
 
+@media (max-width: 480px) {
+    .attendance-status {
+        margin-bottom: 15px;
+    }
+}
+
 .status-badge {
     display: inline-block;
     padding: 6px 20px;
@@ -30,6 +36,13 @@
     .status-badge {
         padding: 5px 15px;
         font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .status-badge {
+        padding: 4px 12px;
+        font-size: 11px;
     }
 }
 
@@ -49,6 +62,13 @@
     .attendance-date {
         font-size: 24px;
         margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .attendance-date {
+        font-size: 20px;
+        margin-bottom: 12px;
     }
 }
 
@@ -72,6 +92,13 @@
     }
 }
 
+@media (max-width: 480px) {
+    .attendance-time {
+        font-size: 28px;
+        margin-bottom: 25px;
+    }
+}
+
 .attendance-message {
     font-size: 18px;
     font-weight: bold;
@@ -92,6 +119,13 @@
     }
 }
 
+@media (max-width: 480px) {
+    .attendance-message {
+        font-size: 13px;
+        margin-top: 12px;
+    }
+}
+
 .attendance-actions {
     display: flex;
     gap: 20px;
@@ -104,6 +138,13 @@
         flex-direction: column;
         gap: 15px;
         margin-top: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .attendance-actions {
+        gap: 12px;
+        margin-top: 12px;
     }
 }
 
@@ -136,6 +177,15 @@
         max-width: 300px;
         padding: 8px 40px;
         font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .attendance-button {
+        max-width: 100%;
+        padding: 10px 20px;
+        font-size: 15px;
+        min-height: 44px;
     }
 }
 

@@ -19,6 +19,12 @@
     }
 }
 
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 15px 12px;
+    }
+}
+
 .auth-title {
     text-align: center;
     font-size: 24px;
@@ -37,6 +43,13 @@
     .auth-title {
         font-size: 20px;
         margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-title {
+        font-size: 18px;
+        margin-bottom: 18px;
     }
 }
 
@@ -60,6 +73,14 @@
     }
 }
 
+@media (max-width: 480px) {
+    .auth-message {
+        margin-bottom: 18px;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+}
+
 .auth-description {
     text-align: center;
     color: #666;
@@ -70,6 +91,13 @@
     .auth-description {
         margin-bottom: 20px;
         font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-description {
+        margin-bottom: 18px;
+        font-size: 12px;
     }
 }
 
@@ -104,6 +132,15 @@
     }
 }
 
+@media (max-width: 480px) {
+    .auth-button {
+        max-width: 100%;
+        padding: 12px 20px;
+        font-size: 14px;
+        min-height: 44px;
+    }
+}
+
 .auth-button:hover {
     background-color: #d1d5db;
 }
@@ -118,6 +155,12 @@
 @media (max-width: 768px) {
     .auth-form {
         gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-form {
+        gap: 12px;
     }
 }
 
@@ -146,6 +189,14 @@
     }
 }
 
+@media (max-width: 480px) {
+    .auth-input {
+        font-size: 16px;
+        padding: 12px;
+        min-height: 44px;
+    }
+}
+
 .auth-input:focus {
     outline: none;
     border-color: #9333ea;
@@ -162,6 +213,14 @@
     .auth-input--code {
         font-size: 20px;
         letter-spacing: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-input--code {
+        font-size: 18px;
+        letter-spacing: 4px;
+        min-height: 44px;
     }
 }
 
@@ -183,6 +242,16 @@
         width: 100%;
         max-width: 280px;
         margin-top: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-submit {
+        max-width: 100%;
+        padding: 14px;
+        font-size: 15px;
+        min-height: 44px;
+        margin-top: 8px;
     }
 }
 
@@ -214,6 +283,14 @@
     }
 }
 
+@media (max-width: 480px) {
+    .auth-link-text {
+        font-size: 12px;
+        display: inline-block;
+        padding: 8px;
+    }
+}
+
 .auth-link-text:hover {
     text-decoration: underline;
 }
@@ -231,6 +308,14 @@
 @media (max-width: 768px) {
     .auth-link-button {
         font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-link-button {
+        font-size: 12px;
+        padding: 8px;
+        min-height: 44px;
     }
 }
 
