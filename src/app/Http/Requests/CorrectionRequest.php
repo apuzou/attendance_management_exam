@@ -15,18 +15,29 @@ use Carbon\Carbon;
 class CorrectionRequest extends FormRequest
 {
     /**
+     * 管理者による修正かどうか（キャッシュ用）
+     */
+    protected ?bool $isAdmin = null;
+
+    /**
      * 管理者による修正かどうかを判定
-     * ルート名がadmin.updateの場合は管理者による修正
+     * 一度判定した結果はプロパティにキャッシュする
      */
     protected function isAdminRequest(): bool
     {
+        if ($this->isAdmin !== null) {
+            return $this->isAdmin;
+        }
+
         $user = Auth::user();
         if (!$user || $user->role !== 'admin') {
+            $this->isAdmin = false;
             return false;
         }
 
         $routeName = $this->route()->getName();
-        return $routeName === 'admin.update';
+        $this->isAdmin = $routeName === 'admin.update';
+        return $this->isAdmin;
     }
 
     /**
@@ -42,7 +53,9 @@ class CorrectionRequest extends FormRequest
         }
 
         if ($this->isAdminRequest()) {
-            return Auth::user()->canViewAttendance($attendance->user_id);
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+            return $user->canViewAttendance($attendance->user_id);
         }
 
         return $attendance->user_id === Auth::id();
@@ -63,7 +76,10 @@ class CorrectionRequest extends FormRequest
 
     public function messages()
     {
-        return [
+        // 管理者と一般ユーザーで異なるメッセージを返す(テストケースID 11, 13に合わせる)
+        $isAdmin = $this->isAdminRequest();
+
+        $baseMessages = [
             'corrected_clock_in.date_format' => '修正出勤時間は時間形式で入力してください',
             'corrected_clock_out.date_format' => '修正退勤時間は時間形式で入力してください',
             'note.required' => '備考を記入してください',
@@ -72,19 +88,35 @@ class CorrectionRequest extends FormRequest
             'break_times.array' => '休憩時間は配列形式で入力してください',
             'break_times.*.break_start.date_format' => '休憩開始時間は時間形式で入力してください',
             'break_times.*.break_end.date_format' => '休憩終了時間は時間形式で入力してください',
-
             'attendance.invalid' => '無効な勤怠情報です',
             'note.pending_request' => '承認待ちのため修正はできません。',
-            'corrected_clock_in.invalid_time' => '出勤時刻または退勤時刻が不適切な値です',
             'break_times.*.break_start.required' => '休憩開始時刻を入力してください',
             'break_times.*.break_end.required' => '休憩終了時刻を入力してください',
             'break_times.*.break_end.after_start' => '休憩終了時刻は開始時刻より後に設定してください',
-            'break_times.*.break_start.after_clock_in' => '休憩開始時間は出勤時間より後に設定してください',
-            'break_times.*.break_start.before_clock_out' => '休憩開始時間は退勤時間より前に設定してください',
-            'break_times.*.break_end.before_clock_out' => '休憩終了時間は退勤時間より前に設定してください',
-            'break_times.*.break_end.after_clock_in' => '休憩終了時間は出勤時間より後に設定してください',
             'break_times.exceeds_work_time' => '休憩時間は実働時間を超えることはできません',
         ];
+
+        if ($isAdmin) {
+            // 管理者用メッセージ（ID 13）
+            $baseMessages['corrected_clock_in.invalid_time'] = '出勤時間もしくは退勤時間が不適切な値です';
+            $baseMessages['break_times.*.break_start.invalid_time'] = '休憩時間が不適切な値です';
+            $baseMessages['break_times.*.break_end.invalid_time'] = '休憩時間もしくは退勤時間が不適切な値です';
+            $baseMessages['break_times.*.break_start.after_clock_in'] = '休憩開始時間は出勤時間より後に設定してください';
+            $baseMessages['break_times.*.break_start.before_clock_out'] = '休憩開始時間は退勤時間より前に設定してください';
+            $baseMessages['break_times.*.break_end.before_clock_out'] = '休憩終了時間は退勤時間より前に設定してください';
+            $baseMessages['break_times.*.break_end.after_clock_in'] = '休憩終了時間は出勤時間より後に設定してください';
+        } else {
+            // 一般ユーザー用メッセージ（ID 11）
+            $baseMessages['corrected_clock_in.invalid_time'] = '出勤時間が不適切な値です';
+            $baseMessages['break_times.*.break_start.invalid_time'] = '休憩開始時間が不適切な値です';
+            $baseMessages['break_times.*.break_end.invalid_time'] = '休憩終了時間が不適切な値です';
+            $baseMessages['break_times.*.break_start.after_clock_in'] = '休憩開始時間は出勤時間より後に設定してください';
+            $baseMessages['break_times.*.break_start.before_clock_out'] = '休憩開始時間は退勤時間より前に設定してください';
+            $baseMessages['break_times.*.break_end.before_clock_out'] = '休憩終了時間は退勤時間より前に設定してください';
+            $baseMessages['break_times.*.break_end.after_clock_in'] = '休憩終了時間は出勤時間より後に設定してください';
+        }
+
+        return $baseMessages;
     }
 
     /**
@@ -166,7 +198,8 @@ class CorrectionRequest extends FormRequest
             if ($clockInTime) {
                 foreach ($validBreakTimes as $break) {
                     if ($break['start']->lt($clockInTime)) {
-                        $validator->errors()->add("break_times.{$break['index']}.break_start", $this->messages()['break_times.*.break_start.after_clock_in']);
+                        $messageKey = $this->isAdminRequest() ? 'break_times.*.break_start.after_clock_in' : 'break_times.*.break_start.invalid_time';
+                        $validator->errors()->add("break_times.{$break['index']}.break_start", $this->messages()[$messageKey]);
                     }
                 }
             }
@@ -175,7 +208,8 @@ class CorrectionRequest extends FormRequest
             if ($clockOutTime) {
                 foreach ($validBreakTimes as $break) {
                     if ($break['end']->gt($clockOutTime)) {
-                        $validator->errors()->add("break_times.{$break['index']}.break_end", $this->messages()['break_times.*.break_end.before_clock_out']);
+                        $messageKey = $this->isAdminRequest() ? 'break_times.*.break_end.invalid_time' : 'break_times.*.break_end.before_clock_out';
+                        $validator->errors()->add("break_times.{$break['index']}.break_end", $this->messages()[$messageKey]);
                     }
                 }
             }
@@ -192,19 +226,23 @@ class CorrectionRequest extends FormRequest
 
                     // 現在の休憩時間が出勤時間と退勤時間の範囲内にあることをチェック
                     if ($currentBreak['start']->lt($clockInTime)) {
-                        $validator->errors()->add("break_times.{$currentBreak['index']}.break_start", $this->messages()['break_times.*.break_start.after_clock_in']);
+                        $messageKey = $this->isAdminRequest() ? 'break_times.*.break_start.after_clock_in' : 'break_times.*.break_start.invalid_time';
+                        $validator->errors()->add("break_times.{$currentBreak['index']}.break_start", $this->messages()[$messageKey]);
                     }
 
                     if ($currentBreak['start']->gt($clockOutTime)) {
-                        $validator->errors()->add("break_times.{$currentBreak['index']}.break_start", $this->messages()['break_times.*.break_start.before_clock_out']);
+                        $messageKey = $this->isAdminRequest() ? 'break_times.*.break_start.invalid_time' : 'break_times.*.break_start.before_clock_out';
+                        $validator->errors()->add("break_times.{$currentBreak['index']}.break_start", $this->messages()[$messageKey]);
                     }
 
                     if ($currentBreak['end']->gt($clockOutTime)) {
-                        $validator->errors()->add("break_times.{$currentBreak['index']}.break_end", $this->messages()['break_times.*.break_end.before_clock_out']);
+                        $messageKey = $this->isAdminRequest() ? 'break_times.*.break_end.invalid_time' : 'break_times.*.break_end.before_clock_out';
+                        $validator->errors()->add("break_times.{$currentBreak['index']}.break_end", $this->messages()[$messageKey]);
                     }
 
                     if ($currentBreak['end']->lt($clockInTime)) {
-                        $validator->errors()->add("break_times.{$currentBreak['index']}.break_end", $this->messages()['break_times.*.break_end.after_clock_in']);
+                        $messageKey = $this->isAdminRequest() ? 'break_times.*.break_end.after_clock_in' : 'break_times.*.break_end.invalid_time';
+                        $validator->errors()->add("break_times.{$currentBreak['index']}.break_end", $this->messages()[$messageKey]);
                     }
 
                     // 次の休憩時間との重複・順序チェック
