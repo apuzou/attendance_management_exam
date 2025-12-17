@@ -40,6 +40,14 @@ class AdminController extends Controller
         $dateParam = $request->get('date', Carbon::today()->format('Y-m-d'));
         $currentDate = Carbon::parse($dateParam)->startOfDay();
 
+        // カレンダー表示月の処理（calendar_monthパラメータがあればその月、なければ現在の日付の月）
+        $calendarMonthParam = $request->get('calendar_month');
+        if ($calendarMonthParam) {
+            $calendarMonth = Carbon::parse($calendarMonthParam)->startOfMonth();
+        } else {
+            $calendarMonth = $currentDate->copy()->startOfMonth();
+        }
+
         $query = Attendance::where('date', $currentDate->toDateString())
             ->whereNotNull('clock_in')
             ->with(['user', 'breakTimes']);
@@ -57,12 +65,17 @@ class AdminController extends Controller
 
         $prevDate = $currentDate->copy()->subDay()->format('Y-m-d');
         $nextDate = $currentDate->copy()->addDay()->format('Y-m-d');
+        $prevCalendarMonth = $calendarMonth->copy()->subMonth()->format('Y-m');
+        $nextCalendarMonth = $calendarMonth->copy()->addMonth()->format('Y-m');
 
         return view('admin.index', [
             'attendances' => $attendances,
             'currentDate' => $currentDate,
             'prevDate' => $prevDate,
             'nextDate' => $nextDate,
+            'calendarMonth' => $calendarMonth,
+            'prevCalendarMonth' => $prevCalendarMonth,
+            'nextCalendarMonth' => $nextCalendarMonth,
         ]);
     }
 

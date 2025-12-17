@@ -30,3 +30,216 @@ body:has(.admin-header) .main {
         margin-top: 15px;
     }
 }
+
+/* カレンダーコンポーネント */
+.admin-calendar-toggle {
+    display: none;
+}
+
+.admin-calendar-trigger {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    user-select: none;
+}
+
+.admin-calendar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.admin-calendar-toggle:checked ~ .admin-calendar-overlay {
+    opacity: 1;
+    visibility: visible;
+}
+
+.admin-calendar-overlay-close {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.admin-calendar {
+    position: relative;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    min-width: 300px;
+    max-width: 90vw;
+    z-index: 10000;
+    transform: scale(0.9);
+    transition: transform 0.3s;
+}
+
+.admin-calendar-toggle:checked ~ .admin-calendar-overlay .admin-calendar {
+    transform: scale(1);
+}
+
+@media (max-width: 480px) {
+    .admin-calendar {
+        min-width: 280px;
+        padding: 15px;
+    }
+}
+
+.admin-calendar-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.admin-calendar-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    text-decoration: none;
+    color: #666;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.admin-calendar-nav:hover {
+    background-color: #f0f0f0;
+    color: #000;
+}
+
+@media (max-width: 480px) {
+    .admin-calendar-nav {
+        width: 28px;
+        height: 28px;
+        font-size: 18px;
+    }
+}
+
+.admin-calendar-month {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+}
+
+@media (max-width: 480px) {
+    .admin-calendar-month {
+        font-size: 16px;
+    }
+}
+
+.admin-calendar-close {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    user-select: none;
+    line-height: 1;
+}
+
+.admin-calendar-close:hover {
+    background-color: #f0f0f0;
+}
+
+@media (max-width: 480px) {
+    .admin-calendar-close {
+        width: 28px;
+        height: 28px;
+        font-size: 22px;
+    }
+}
+
+.admin-calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.admin-calendar-weekday {
+    text-align: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: #666;
+    padding: 4px;
+}
+
+@media (max-width: 480px) {
+    .admin-calendar-weekday {
+        font-size: 11px;
+        padding: 2px;
+    }
+}
+
+.admin-calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.admin-calendar-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
+    text-decoration: none;
+    color: #333;
+    font-size: 14px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+@media (max-width: 480px) {
+    .admin-calendar-day {
+        padding: 6px 2px;
+        font-size: 12px;
+    }
+}
+
+.admin-calendar-day:hover {
+    background-color: #f0f0f0;
+}
+
+.admin-calendar-day--current {
+    background-color: #000;
+    color: #fff;
+}
+
+.admin-calendar-day--current:hover {
+    background-color: #333;
+}
+
+.admin-calendar-day--other-month {
+    color: #ccc;
+}
+
+.admin-calendar-day--other-month:hover {
+    background-color: #f9f9f9;
+}

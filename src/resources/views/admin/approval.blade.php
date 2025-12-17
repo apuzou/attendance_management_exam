@@ -44,11 +44,9 @@
                     </td>
                 </tr>
                 @php
-                    // 修正申請の休憩時間を表示
                     $displayBreakTimes = [];
                     $breakCorrectionRequests = $request->breakCorrectionRequests->sortBy('id');
-                    
-                    // 既存の休憩時間を修正申請で更新
+
                     $existingBreakTimes = $attendance->breakTimes->sortBy('id');
                     foreach ($existingBreakTimes as $breakTime) {
                         $correctionRequest = $breakCorrectionRequests->where('break_time_id', $breakTime->id)->first();
@@ -66,8 +64,7 @@
                             ];
                         }
                     }
-                    
-                    // 新規追加の休憩時間を追加
+
                     foreach ($breakCorrectionRequests->whereNull('break_time_id') as $correctionRequest) {
                         $displayBreakTimes[] = [
                             'id' => null,
@@ -75,8 +72,7 @@
                             'break_end' => $correctionRequest->corrected_break_end,
                         ];
                     }
-                    
-                    // 表示用に時系列でソート（開始時刻でソート）
+
                     usort($displayBreakTimes, function ($first, $second) {
                         $firstStart = strtotime($first['break_start']);
                         $secondStart = strtotime($second['break_start']);

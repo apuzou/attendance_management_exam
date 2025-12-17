@@ -57,12 +57,10 @@
                     </td>
                 </tr>
                 @php
-                    // 承認待ちの修正申請がある場合、修正申請の休憩時間を使用
                     if ($pendingRequest && $pendingRequest->breakCorrectionRequests) {
                         $displayBreakTimes = [];
                         $breakCorrectionRequests = $pendingRequest->breakCorrectionRequests->sortBy('id');
-                        
-                        // 既存の休憩時間を修正申請で更新
+
                         $existingBreakTimes = $attendance->breakTimes->sortBy('id');
                         foreach ($existingBreakTimes as $breakTime) {
                             $correctionRequest = $breakCorrectionRequests->where('break_time_id', $breakTime->id)->first();
@@ -82,8 +80,7 @@
                                 ];
                             }
                         }
-                        
-                        // 新規追加の休憩時間を追加
+
                         foreach ($breakCorrectionRequests->whereNull('break_time_id') as $correctionRequest) {
                             $displayBreakTimes[] = [
                                 'id' => null,
@@ -92,15 +89,13 @@
                                 'is_new' => true,
                             ];
                         }
-                        
-                        // 表示用に時系列でソート（開始時刻でソート）
+
                         usort($displayBreakTimes, function ($first, $second) {
                             $firstStart = strtotime($first['break_start']);
                             $secondStart = strtotime($second['break_start']);
                             return $firstStart <=> $secondStart;
                         });
                     } else {
-                        // 修正申請がない場合、通常の休憩時間を使用
                         $displayBreakTimes = $attendance->breakTimes->sortBy('id')->map(function($breakTime) {
                             return [
                                 'id' => $breakTime->id,
@@ -109,8 +104,7 @@
                                 'is_new' => false,
                             ];
                         })->toArray();
-                        
-                        // 表示用に時系列でソート（開始時刻でソート）
+
                         usort($displayBreakTimes, function ($first, $second) {
                             $firstStart = strtotime($first['break_start']);
                             $secondStart = strtotime($second['break_start']);
