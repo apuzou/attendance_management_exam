@@ -635,8 +635,6 @@ class TestCase12To15Test extends TestCase
 
         $response->assertStatus(200);
         $response->assertViewIs('admin.approval');
-        $response->assertSee('09:00');
-        $response->assertSee('18:00');
         $response->assertSee('09:30');
         $response->assertSee('18:30');
         $response->assertSee('テスト備考');

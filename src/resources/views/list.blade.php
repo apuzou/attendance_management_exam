@@ -44,7 +44,7 @@
                     });
                 @endphp
                 <tr>
-                    <td class="list-date">{{ $currentDate->format('m/d') }}({{ ['日', '月', '火', '水', '木', '金', '土'][$currentDate->dayOfWeek] }})</td>
+                    <td class="list-date">{{ $currentDate->format('Y年n月j日') }}</td>
                     <td>{{ $attendance && $attendance->clock_in ? date('H:i', strtotime($attendance->clock_in)) : '' }}</td>
                     <td>{{ $attendance && $attendance->clock_out ? date('H:i', strtotime($attendance->clock_out)) : '' }}</td>
                     <td>{{ $attendance ? $attendance->getTotalBreakTime() : '' }}</td>
