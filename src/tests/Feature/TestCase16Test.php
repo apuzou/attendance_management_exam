@@ -17,8 +17,6 @@ class TestCase16Test extends TestCase
     /**
      * ID 16: メール認証機能
      * テスト内容: 会員登録後、認証メールが送信される
-     * テスト手順: 1. 会員登録をする 2. 認証メールを送信する
-     * 期待挙動: 登録したメールアドレス宛に認証メールが送信されている
      */
     public function test_verification_email_sent_after_registration()
     {
@@ -38,7 +36,6 @@ class TestCase16Test extends TestCase
         $this->assertNotNull($user->verification_code);
         $this->assertNotNull($user->verification_code_expires_at);
 
-        // 認証コードメールが送信されていることを確認
         Mail::assertSent(\App\Mail\VerificationCodeMail::class, function ($mail) use ($user) {
             return $mail->hasTo('test@example.com');
         });
@@ -47,8 +44,6 @@ class TestCase16Test extends TestCase
     /**
      * ID 16: メール認証機能
      * テスト内容: メール認証誘導画面で「認証はこちらから」ボタンを押下するとメール認証サイトに遷移する
-     * テスト手順: 1. メール認証導線画面を表示する 2. 「認証はこちらから」ボタンを押下 3. メール認証サイトを表示する
-     * 期待挙動: メール認証サイトに遷移する
      */
     public function test_verification_guidance_button_navigates_to_verification_code_screen()
     {
@@ -71,8 +66,6 @@ class TestCase16Test extends TestCase
     /**
      * ID 16: メール認証機能
      * テスト内容: メール認証サイトのメール認証を完了すると、勤怠登録画面に遷移する
-     * テスト手順: 1. メール認証を完了する 2. 勤怠登録画面を表示する
-     * 期待挙動: 勤怠登録画面に遷移する
      */
     public function test_email_verification_completion_navigates_to_attendance_screen()
     {

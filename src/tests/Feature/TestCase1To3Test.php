@@ -168,7 +168,7 @@ class TestCase1To3Test extends TestCase
 
     /**
      * ID 2: ログイン認証機能（一般ユーザー）
-     * テスト内容: ログイン情報が登録されていない場合、バリデーションメッセージが表示される
+     * テスト内容: 登録情報と一致しない場合、バリデーションメッセージが表示される
      */
     public function test_login_fails_with_unregistered_credentials()
     {
@@ -179,7 +179,7 @@ class TestCase1To3Test extends TestCase
 
         $response->assertSessionHasErrors(['email']);
         $response->assertSessionHas('errors', function ($errors) {
-            return $errors->first('email') === 'メールアドレスまたはパスワードが正しくありません。';
+            return $errors->first('email') === 'ログイン情報が登録されていません。';
         });
     }
 
@@ -233,7 +233,7 @@ class TestCase1To3Test extends TestCase
 
         $response->assertSessionHasErrors(['email']);
         $response->assertSessionHas('errors', function ($errors) {
-            return $errors->first('email') === 'メールアドレスまたはパスワードが正しくありません。';
+            return $errors->first('email') === 'ログイン情報が登録されていません。';
         });
     }
 }

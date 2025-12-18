@@ -101,19 +101,19 @@ class CorrectionRequest extends FormRequest
             $baseMessages['corrected_clock_in.invalid_time'] = '出勤時間もしくは退勤時間が不適切な値です';
             $baseMessages['break_times.*.break_start.invalid_time'] = '休憩時間が不適切な値です';
             $baseMessages['break_times.*.break_end.invalid_time'] = '休憩時間もしくは退勤時間が不適切な値です';
-            $baseMessages['break_times.*.break_start.after_clock_in'] = '休憩開始時間は出勤時間より後に設定してください';
-            $baseMessages['break_times.*.break_start.before_clock_out'] = '休憩開始時間は退勤時間より前に設定してください';
-            $baseMessages['break_times.*.break_end.before_clock_out'] = '休憩終了時間は退勤時間より前に設定してください';
-            $baseMessages['break_times.*.break_end.after_clock_in'] = '休憩終了時間は出勤時間より後に設定してください';
+            $baseMessages['break_times.*.break_start.after_clock_in'] = '休憩時間もしくは出勤時間が不適切な値です';
+            $baseMessages['break_times.*.break_start.before_clock_out'] = '休憩時間もしくは退勤時間が不適切な値です';
+            $baseMessages['break_times.*.break_end.before_clock_out'] = '休憩時間もしくは退勤時間が不適切な値です';
+            $baseMessages['break_times.*.break_end.after_clock_in'] = '休憩時間もしくは出勤時間が不適切な値です';
         } else {
             // 一般ユーザー用メッセージ（ID 11）
             $baseMessages['corrected_clock_in.invalid_time'] = '出勤時間が不適切な値です';
-            $baseMessages['break_times.*.break_start.invalid_time'] = '休憩開始時間が不適切な値です';
+            $baseMessages['break_times.*.break_start.invalid_time'] = '休憩時間が不適切な値です';
             $baseMessages['break_times.*.break_end.invalid_time'] = '休憩終了時間が不適切な値です';
-            $baseMessages['break_times.*.break_start.after_clock_in'] = '休憩開始時間は出勤時間より後に設定してください';
-            $baseMessages['break_times.*.break_start.before_clock_out'] = '休憩開始時間は退勤時間より前に設定してください';
-            $baseMessages['break_times.*.break_end.before_clock_out'] = '休憩終了時間は退勤時間より前に設定してください';
-            $baseMessages['break_times.*.break_end.after_clock_in'] = '休憩終了時間は出勤時間より後に設定してください';
+            $baseMessages['break_times.*.break_start.after_clock_in'] = '休憩時間もしくは出勤時間が不適切な値です';
+            $baseMessages['break_times.*.break_start.before_clock_out'] = '休憩時間もしくは退勤時間が不適切な値です';
+            $baseMessages['break_times.*.break_end.before_clock_out'] = '休憩時間もしくは退勤時間が不適切な値です';
+            $baseMessages['break_times.*.break_end.after_clock_in'] = '休憩時間もしくは出勤時間が不適切な値です';
         }
 
         return $baseMessages;

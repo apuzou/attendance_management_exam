@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Attendance;
 use App\Models\StampCorrectionRequest;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -187,7 +186,10 @@ class TestCase12To15Test extends TestCase
             'break_times' => [],
         ]);
 
-        $response->assertSessionHasErrors();
+        $response->assertSessionHasErrors(['corrected_clock_in']);
+        $response->assertSessionHas('errors', function ($errors) {
+            return $errors->first('corrected_clock_in') === '出勤時間もしくは退勤時間が不適切な値です';
+        });
     }
 
     /**
@@ -226,7 +228,10 @@ class TestCase12To15Test extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrors();
+        $response->assertSessionHasErrors('break_times.0.break_start');
+        $response->assertSessionHas('errors', function ($errors) {
+            return $errors->first('break_times.0.break_start') === '休憩時間が不適切な値です';
+        });
     }
 
     /**
@@ -265,7 +270,10 @@ class TestCase12To15Test extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrors();
+        $response->assertSessionHasErrors('break_times.0.break_end');
+        $response->assertSessionHas('errors', function ($errors) {
+            return $errors->first('break_times.0.break_end') === '休憩時間もしくは退勤時間が不適切な値です';
+        });
     }
 
     /**

@@ -6,7 +6,6 @@ use App\Models\Attendance;
 use App\Models\BreakTime;
 use App\Models\StampCorrectionRequest;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -20,8 +19,6 @@ class TestCase9To11Test extends TestCase
     /**
      * ID 9: 勤怠一覧情報取得機能（一般ユーザー）
      * テスト内容: 自分が行った勤怠情報が全て表示されている
-     * テスト手順: 1. 勤怠情報が登録されたユーザーにログインする 2. 勤怠一覧ページを開く 3. 自分の勤怠情報がすべて表示されていることを確認する
-     * 期待挙動: 自分の勤怠情報が全て表示されている
      */
     public function test_attendance_list_displays_all_user_attendances()
     {
@@ -30,7 +27,6 @@ class TestCase9To11Test extends TestCase
             'email_verified_at' => now(),
         ]);
 
-        // 複数の勤怠レコードを作成
         $attendance1 = Attendance::create([
             'user_id' => $user->id,
             'date' => now()->subDays(2)->toDateString(),
@@ -56,8 +52,6 @@ class TestCase9To11Test extends TestCase
     /**
      * ID 9: 勤怠一覧情報取得機能（一般ユーザー）
      * テスト内容: 勤怠一覧画面に遷移した際に現在の月が表示される
-     * テスト手順: 1. ユーザーにログインをする 2. 勤怠一覧ページを開く
-     * 期待挙動: 現在の月が表示されている
      */
     public function test_attendance_list_displays_current_month_by_default()
     {
@@ -273,10 +267,10 @@ class TestCase9To11Test extends TestCase
             'break_times' => [],
         ]);
 
-        $response->assertSessionHasErrors();
-        // 出勤時間が退勤時間より後の場合、バリデーションエラーが発生することを確認
-        $errors = session('errors');
-        $this->assertNotNull($errors);
+        $response->assertSessionHasErrors(['corrected_clock_in']);
+        $response->assertSessionHas('errors', function ($errors) {
+            return $errors->first('corrected_clock_in') === '出勤時間が不適切な値です';
+        });
     }
 
     /**
@@ -309,12 +303,15 @@ class TestCase9To11Test extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrors();
+        $response->assertSessionHasErrors('break_times.0.break_start');
+        $response->assertSessionHas('errors', function ($errors) {
+            return $errors->first('break_times.0.break_start') === '休憩時間が不適切な値です';
+        });
     }
 
     /**
      * ID 11: 勤怠詳細情報修正機能（一般ユーザー）
-     * テスト内容: 休憩終了時間が不適切な値の場合、エラーメッセージが表示される
+     * テスト内容: 休憩終了時間が退勤時間より後になっている場合、エラーメッセージが表示される
      */
     public function test_correction_validation_break_end_invalid_shows_error()
     {
@@ -342,7 +339,10 @@ class TestCase9To11Test extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrors();
+        $response->assertSessionHasErrors('break_times.0.break_end');
+        $response->assertSessionHas('errors', function ($errors) {
+            return $errors->first('break_times.0.break_end') === '休憩時間もしくは退勤時間が不適切な値です';
+        });
     }
 
     /**
@@ -412,7 +412,7 @@ class TestCase9To11Test extends TestCase
 
     /**
      * ID 11: 勤怠詳細情報修正機能（一般ユーザー）
-     * テスト内容: 申請一覧に承認待ちの申請が表示される
+     * テスト内容: 申請一覧にログインユーザーが行った承認待ちの申請がすべて表示される
      */
     public function test_correction_list_displays_pending_requests()
     {
@@ -421,22 +421,66 @@ class TestCase9To11Test extends TestCase
             'email_verified_at' => now(),
         ]);
 
-        $attendance = Attendance::create([
+        $otherUser = User::factory()->create([
+            'role' => 'general',
+            'email_verified_at' => now(),
+        ]);
+
+        $attendance1 = Attendance::create([
             'user_id' => $user->id,
+            'date' => now()->subDays(2)->toDateString(),
+            'clock_in' => '09:00:00',
+            'clock_out' => '18:00:00',
+        ]);
+
+        $correctionRequest1 = StampCorrectionRequest::create([
+            'attendance_id' => $attendance1->id,
+            'user_id' => $user->id,
+            'request_date' => now()->subDays(2)->toDateString(),
+            'original_clock_in' => '09:00:00',
+            'original_clock_out' => '18:00:00',
+            'corrected_clock_in' => '09:30:00',
+            'corrected_clock_out' => '18:30:00',
+            'note' => 'テスト備考1',
+            'approved_at' => null,
+        ]);
+
+        $attendance2 = Attendance::create([
+            'user_id' => $user->id,
+            'date' => now()->subDay()->toDateString(),
+            'clock_in' => '09:00:00',
+            'clock_out' => '18:00:00',
+        ]);
+
+        $correctionRequest2 = StampCorrectionRequest::create([
+            'attendance_id' => $attendance2->id,
+            'user_id' => $user->id,
+            'request_date' => now()->subDay()->toDateString(),
+            'original_clock_in' => '09:00:00',
+            'original_clock_out' => '18:00:00',
+            'corrected_clock_in' => '10:00:00',
+            'corrected_clock_out' => '19:00:00',
+            'note' => 'テスト備考2',
+            'approved_at' => null,
+        ]);
+
+        // 他のユーザーの承認待ち申請（表示されないことを確認するため）
+        $otherAttendance = Attendance::create([
+            'user_id' => $otherUser->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
 
-        $correctionRequest = StampCorrectionRequest::create([
-            'attendance_id' => $attendance->id,
-            'user_id' => $user->id,
+        $otherCorrectionRequest = StampCorrectionRequest::create([
+            'attendance_id' => $otherAttendance->id,
+            'user_id' => $otherUser->id,
             'request_date' => now()->toDateString(),
             'original_clock_in' => '09:00:00',
             'original_clock_out' => '18:00:00',
             'corrected_clock_in' => '09:30:00',
             'corrected_clock_out' => '18:30:00',
-            'note' => 'テスト備考',
+            'note' => '他のユーザーの備考',
             'approved_at' => null,
         ]);
 
@@ -444,11 +488,15 @@ class TestCase9To11Test extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('承認待ち');
+        $response->assertSee('テスト備考1');
+        $response->assertSee('テスト備考2');
+        // 他のユーザーの申請が表示されないことを確認
+        $response->assertDontSee('他のユーザーの備考');
     }
 
     /**
      * ID 11: 勤怠詳細情報修正機能（一般ユーザー）
-     * テスト内容: 申請一覧に承認済みの申請が表示される
+     * テスト内容: 申請一覧にログインユーザーが行った申請で承認されたものが「承認済み」にすべて表示される
      */
     public function test_correction_list_displays_approved_requests()
     {
@@ -457,29 +505,75 @@ class TestCase9To11Test extends TestCase
             'email_verified_at' => now(),
         ]);
 
-        $attendance = Attendance::create([
+        $otherUser = User::factory()->create([
+            'role' => 'general',
+            'email_verified_at' => now(),
+        ]);
+
+        $attendance1 = Attendance::create([
             'user_id' => $user->id,
+            'date' => now()->subDays(2)->toDateString(),
+            'clock_in' => '09:00:00',
+            'clock_out' => '18:00:00',
+        ]);
+
+        $correctionRequest1 = StampCorrectionRequest::create([
+            'attendance_id' => $attendance1->id,
+            'user_id' => $user->id,
+            'request_date' => now()->subDays(2)->toDateString(),
+            'original_clock_in' => '09:00:00',
+            'original_clock_out' => '18:00:00',
+            'corrected_clock_in' => '09:30:00',
+            'corrected_clock_out' => '18:30:00',
+            'note' => 'テスト備考1',
+            'approved_at' => now()->subDays(2),
+        ]);
+
+        $attendance2 = Attendance::create([
+            'user_id' => $user->id,
+            'date' => now()->subDay()->toDateString(),
+            'clock_in' => '09:00:00',
+            'clock_out' => '18:00:00',
+        ]);
+
+        $correctionRequest2 = StampCorrectionRequest::create([
+            'attendance_id' => $attendance2->id,
+            'user_id' => $user->id,
+            'request_date' => now()->subDay()->toDateString(),
+            'original_clock_in' => '09:00:00',
+            'original_clock_out' => '18:00:00',
+            'corrected_clock_in' => '10:00:00',
+            'corrected_clock_out' => '19:00:00',
+            'note' => 'テスト備考2',
+            'approved_at' => now()->subDay(),
+        ]);
+
+        $otherAttendance = Attendance::create([
+            'user_id' => $otherUser->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
 
-        $correctionRequest = StampCorrectionRequest::create([
-            'attendance_id' => $attendance->id,
-            'user_id' => $user->id,
+        $otherCorrectionRequest = StampCorrectionRequest::create([
+            'attendance_id' => $otherAttendance->id,
+            'user_id' => $otherUser->id,
             'request_date' => now()->toDateString(),
             'original_clock_in' => '09:00:00',
             'original_clock_out' => '18:00:00',
             'corrected_clock_in' => '09:30:00',
             'corrected_clock_out' => '18:30:00',
-            'note' => 'テスト備考',
+            'note' => '他のユーザーの備考',
             'approved_at' => now(),
         ]);
 
-        $response = $this->actingAs($user)->get('/stamp_correction_request/list');
+        $response = $this->actingAs($user)->get('/stamp_correction_request/list?tab=approved');
 
         $response->assertStatus(200);
         $response->assertSee('承認済み');
+        $response->assertSee('テスト備考1');
+        $response->assertSee('テスト備考2');
+        $response->assertDontSee('他のユーザーの備考');
     }
 
     /**
@@ -512,7 +606,6 @@ class TestCase9To11Test extends TestCase
             'approved_at' => null,
         ]);
 
-        // 一般ユーザーの場合は詳細リンクは勤怠詳細画面に遷移する
         $response = $this->actingAs($user)->get('/attendance/detail/' . $attendance->id);
 
         $response->assertStatus(200);
