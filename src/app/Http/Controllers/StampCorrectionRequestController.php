@@ -51,13 +51,13 @@ class StampCorrectionRequestController extends Controller
                 $breakStart = isset($break['break_start']) && trim($break['break_start']) !== '' ? trim($break['break_start']) : null;
                 $breakEnd = isset($break['break_end']) && trim($break['break_end']) !== '' ? trim($break['break_end']) : null;
 
-                if (!$breakStart || !$breakEnd) {
+                if ($breakStart === null || $breakEnd === null) {
                     continue;
                 }
 
                 // 既存の休憩時間かどうかを判定
                 $existingBreak = null;
-                if (isset($break['id']) && !empty($break['id'])) {
+                if (isset($break['id']) && $break['id'] !== '') {
                     $existingBreak = $attendance->breakTimes->where('id', $break['id'])->first();
                 }
 
@@ -165,11 +165,11 @@ class StampCorrectionRequestController extends Controller
     /**
      * 修正申請承認画面を表示
      */
-    public function show($id)
+    public function show($attendanceCorrectRequestId)
     {
         $currentUser = Auth::user();
 
-        $correctionRequest = StampCorrectionRequest::where('id', $id)
+        $correctionRequest = StampCorrectionRequest::where('id', $attendanceCorrectRequestId)
             ->with(['attendance.user', 'attendance.breakTimes', 'user', 'breakCorrectionRequests'])
             ->firstOrFail();
 
@@ -177,19 +177,19 @@ class StampCorrectionRequestController extends Controller
             abort(403, 'アクセスが拒否されました');
         }
 
-        if (!$currentUser->canViewAttendance($correctionRequest->user_id)) {
+        if ($currentUser->canViewAttendance($correctionRequest->user_id) === false) {
             abort(403, 'アクセスが拒否されました');
         }
 
         $canApprove = $correctionRequest->user_id !== $currentUser->id;
 
-        $isApproved = !is_null($correctionRequest->approved_at);
+        $isApproved = $correctionRequest->approved_at !== null;
 
         return view('admin.approval', [
             'request' => $correctionRequest,
             'attendance' => $correctionRequest->attendance,
             'user' => $correctionRequest->user,
-            'canApprove' => $canApprove && !$isApproved, // 管理者自身の申請でない、かつ未承認の場合のみ承認可能
+            'canApprove' => $canApprove && $isApproved === false, // 管理者自身の申請でない、かつ未承認の場合のみ承認可能
             'isApproved' => $isApproved,
         ]);
     }
@@ -197,11 +197,11 @@ class StampCorrectionRequestController extends Controller
     /**
      * 修正申請を承認
      */
-    public function update(ApprovalRequest $request, $id)
+    public function update(ApprovalRequest $request, $attendanceCorrectRequestId)
     {
         $currentUser = Auth::user();
 
-        $correctionRequest = StampCorrectionRequest::where('id', $id)
+        $correctionRequest = StampCorrectionRequest::where('id', $attendanceCorrectRequestId)
             ->with(['attendance.breakTimes', 'breakCorrectionRequests'])
             ->firstOrFail();
 
@@ -251,7 +251,7 @@ class StampCorrectionRequestController extends Controller
             DB::commit();
 
             return redirect()->route('correction.index')->with('success', '修正申請を承認しました');
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             DB::rollBack();
 
             return back()->withErrors(['request' => '承認処理に失敗しました'])->withInput();

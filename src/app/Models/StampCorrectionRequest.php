@@ -78,7 +78,7 @@ class StampCorrectionRequest extends Model
      */
     public function isApproved(): bool
     {
-        return !is_null($this->approved_at);
+        return $this->approved_at !== null;
     }
 
     /**
@@ -86,7 +86,7 @@ class StampCorrectionRequest extends Model
      */
     public function isPending(): bool
     {
-        return is_null($this->approved_at);
+        return $this->approved_at === null;
     }
 }
 

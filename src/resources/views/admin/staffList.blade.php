@@ -8,9 +8,9 @@
 
 @section('content')
 <div class="container admin-container">
-    <div class="title">
+    <h2 class="title">
         <span class="title-bar">|</span>スタッフ一覧
-    </div>
+    </h2>
 
     <table class="table">
         <thead>

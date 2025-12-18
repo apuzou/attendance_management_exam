@@ -92,7 +92,7 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         $targetUser = self::find($targetUserId);
-        if (!$targetUser) {
+        if ($targetUser === null) {
             return false;
         }
 

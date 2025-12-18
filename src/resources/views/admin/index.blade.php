@@ -8,9 +8,9 @@
 
 @section('content')
 <div class="container admin-container">
-    <div class="title">
+    <h2 class="title">
         <span class="title-bar">|</span>{{ $currentDate->format('Y年n月j日') }}の勤怠
-    </div>
+    </h2>
 
     <div class="navigation admin-date-navigation">
         <a href="{{ route('admin.index', ['date' => $prevDate]) }}" class="navigation-link">← 前日</a>

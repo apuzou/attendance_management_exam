@@ -51,7 +51,7 @@ class BreakCorrectionRequest extends Model
      */
     public function isModification(): bool
     {
-        return !is_null($this->break_time_id);
+        return $this->break_time_id !== null;
     }
 
     /**
@@ -59,7 +59,7 @@ class BreakCorrectionRequest extends Model
      */
     public function isAddition(): bool
     {
-        return is_null($this->break_time_id);
+        return $this->break_time_id === null;
     }
 }
 

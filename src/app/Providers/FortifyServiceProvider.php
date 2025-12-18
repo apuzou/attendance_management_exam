@@ -88,7 +88,7 @@ class FortifyServiceProvider extends ServiceProvider
 
                     session()->forget('is_admin_login');
 
-                    if (!$user->email_verified_at) {
+                    if ($user->email_verified_at === null) {
                         return redirect()->route('verification.notice');
                     }
 

@@ -8,9 +8,9 @@
 
 @section('content')
 <div class="container">
-    <div class="title">
+    <h2 class="title">
         <span class="title-bar">|</span>勤怠一覧
-    </div>
+    </h2>
 
     <div class="navigation list-month-navigation">
         <a href="{{ route('attendance.list', ['month' => $prevMonth]) }}" class="navigation-link">←前月</a>

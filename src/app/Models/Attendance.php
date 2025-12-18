@@ -108,7 +108,7 @@ class Attendance extends Model
     public function getWorkMinutes(): int
     {
         // 出勤時刻または退勤時刻が未設定の場合は0を返す
-        if (!$this->clock_in || !$this->clock_out) {
+        if ($this->clock_in === null || $this->clock_out === null) {
             return 0;
         }
 

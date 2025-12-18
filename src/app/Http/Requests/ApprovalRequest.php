@@ -25,22 +25,22 @@ class ApprovalRequest extends FormRequest
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
 
-        if (!$user || $user->role !== 'admin') {
+        if ($user === null || $user->role !== 'admin') {
             return false;
         }
 
-        $correctionRequest = StampCorrectionRequest::find($this->route('id'));
+        $correctionRequest = StampCorrectionRequest::find($this->route('attendance_correct_request_id'));
 
-        if (!$correctionRequest) {
+        if ($correctionRequest === null) {
             return false;
         }
 
         // 既に承認済みの場合は認可を拒否
-        if (!is_null($correctionRequest->approved_at)) {
+        if ($correctionRequest->approved_at !== null) {
             return false;
         }
 
-        if (!$user->canViewAttendance($correctionRequest->user_id)) {
+        if ($user->canViewAttendance($correctionRequest->user_id) === false) {
             return false;
         }
 

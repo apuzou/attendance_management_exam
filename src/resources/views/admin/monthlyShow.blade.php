@@ -9,9 +9,9 @@
 
 @section('content')
 <div class="container admin-container">
-    <div class="title">
+    <h2 class="title">
         <span class="title-bar">|</span> {{ $user->name }}さんの勤怠
-    </div>
+    </h2>
 
     <div class="navigation list-month-navigation">
         <a href="{{ route('admin.list', ['id' => $user->id, 'month' => $prevMonth]) }}" class="navigation-link">←前月</a>

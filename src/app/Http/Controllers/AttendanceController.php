@@ -66,7 +66,7 @@ class AttendanceController extends Controller
                         return back()->withErrors(['stamp_type' => '既に出勤しています']);
                     }
 
-                    if (!$attendance) {
+                    if ($attendance === null) {
                         $attendance = Attendance::create([
                             'user_id' => $user->id,
                             'date' => $today,
@@ -82,7 +82,7 @@ class AttendanceController extends Controller
                 case 'break_start':
                 case 'break_end':
                 case 'clock_out':
-                    if (!$attendance || !$attendance->clock_in) {
+                    if ($attendance === null || $attendance->clock_in === null) {
                         return back()->withErrors(['stamp_type' => 'まだ出勤していません']);
                     }
 
@@ -106,7 +106,7 @@ class AttendanceController extends Controller
                             'break_start' => $now->format('H:i:s'),
                         ]);
                     } elseif ($request->stamp_type === 'break_end') {
-                        if (!$activeBreak) {
+                        if ($activeBreak === null) {
                             return back()->withErrors(['stamp_type' => '休憩中ではありません']);
                         }
 
@@ -142,7 +142,7 @@ class AttendanceController extends Controller
     private function getStatus($attendance): string
     {
         // 勤怠レコードが存在しない、または出勤時刻が未設定の場合は勤務外
-        if (!$attendance || !$attendance->clock_in) {
+        if ($attendance === null || $attendance->clock_in === null) {
             return '勤務外';
         }
 

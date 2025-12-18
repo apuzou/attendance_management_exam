@@ -25,7 +25,7 @@ class RedirectIfAuthenticated
             if (Auth::guard($guard)->check()) {
                 $user = Auth::guard($guard)->user();
                 
-                if ($user->role === 'general' && !$user->email_verified_at) {
+                if ($user->role === 'general' && $user->email_verified_at === null) {
                     return redirect()->route('verification.notice');
                 }
                 

@@ -8,9 +8,9 @@
 
 @section('content')
 <div class="container">
-    <div class="title">
+    <h2 class="title">
         <span class="title-bar">|</span>勤怠詳細
-    </div>
+    </h2>
 
     <form method="POST" action="{{ route('attendance.update', $attendance->id) }}" class="show-form" id="show-form">
         @csrf

@@ -9,9 +9,9 @@
 
 @section('content')
 <div class="container admin-container">
-    <div class="title">
+    <h2 class="title">
         <span class="title-bar">|</span> 勤怠詳細
-    </div>
+    </h2>
 
     <form method="POST" action="{{ route('correction.approve', $request->id) }}" class="show-form" id="approval-form">
         @csrf

@@ -38,8 +38,8 @@ Route::middleware(['auth'])->group(function () {
 
         Route::prefix('stamp_correction_request')->name('correction.')->group(function () {
             Route::get('/list', [StampCorrectionRequestController::class, 'index'])->name('index');
-            Route::get('/approve/{id}', [StampCorrectionRequestController::class, 'show'])->name('approve');
-            Route::post('/approve/{id}', [StampCorrectionRequestController::class, 'update'])->name('approve');
+            Route::get('/approve/{attendance_correct_request_id}', [StampCorrectionRequestController::class, 'show'])->name('approve');
+            Route::post('/approve/{attendance_correct_request_id}', [StampCorrectionRequestController::class, 'update'])->name('approve');
         });
     });
 

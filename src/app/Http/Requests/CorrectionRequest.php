@@ -30,7 +30,7 @@ class CorrectionRequest extends FormRequest
         }
 
         $user = Auth::user();
-        if (!$user || $user->role !== 'admin') {
+        if ($user === null || $user->role !== 'admin') {
             $this->isAdmin = false;
             return false;
         }
@@ -48,7 +48,7 @@ class CorrectionRequest extends FormRequest
     {
         $attendance = Attendance::find($this->route('id'));
 
-        if (!$attendance) {
+        if ($attendance === null) {
             return false;
         }
 
@@ -162,17 +162,17 @@ class CorrectionRequest extends FormRequest
                 $breakStartValue = isset($break['break_start']) ? trim($break['break_start']) : '';
                 $breakEndValue = isset($break['break_end']) ? trim($break['break_end']) : '';
 
-                if (!empty($breakStartValue) && empty($breakEndValue)) {
+                if ($breakStartValue !== '' && $breakEndValue === '') {
                     $validator->errors()->add("break_times.{$index}.break_end", $this->messages()['break_times.*.break_end.required']);
                     continue;
                 }
 
-                if (empty($breakStartValue) && !empty($breakEndValue)) {
+                if ($breakStartValue === '' && $breakEndValue !== '') {
                     $validator->errors()->add("break_times.{$index}.break_start", $this->messages()['break_times.*.break_start.required']);
                     continue;
                 }
 
-                if (empty($breakStartValue) && empty($breakEndValue)) {
+                if ($breakStartValue === '' && $breakEndValue === '') {
                     continue;
                 }
 

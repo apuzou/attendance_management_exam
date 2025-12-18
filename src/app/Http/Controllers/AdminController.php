@@ -93,7 +93,7 @@ class AdminController extends Controller
             ->firstOrFail();
 
         // 権限チェック（管理者が閲覧可能な勤怠かどうか 部門外の勤怠は閲覧不可、部門1のみ全閲覧可能）
-        if (!$currentUser->canViewAttendance($attendance->user_id)) {
+        if ($currentUser->canViewAttendance($attendance->user_id) === false) {
             abort(403, 'アクセスが拒否されました');
         }
 
@@ -130,7 +130,7 @@ class AdminController extends Controller
 
         // 部門アクセス権限の管理者が自身の勤怠を修正する場合は申請として扱う
         // フルアクセス権限の管理者は自身の直接修正が可能
-        if ($currentUser->role === 'admin' && $attendance->user_id === $currentUser->id && !$currentUser->hasFullAccess()) {
+        if ($currentUser->role === 'admin' && $attendance->user_id === $currentUser->id && $currentUser->hasFullAccess() === false) {
             return $this->createCorrectionRequest($request, $attendance);
         }
 
@@ -165,11 +165,11 @@ class AdminController extends Controller
                 $breakStart = isset($break['break_start']) && trim($break['break_start']) !== '' ? trim($break['break_start']) : null;
                 $breakEnd = isset($break['break_end']) && trim($break['break_end']) !== '' ? trim($break['break_end']) : null;
 
-                if (!$breakStart || !$breakEnd) {
+                if ($breakStart === null || $breakEnd === null) {
                     continue;
                 }
 
-                if (isset($break['id']) && !empty($break['id'])) {
+                if (isset($break['id']) && $break['id'] !== '') {
                     // 既存の休憩時間を更新
                     $existingBreak = $attendance->breakTimes->where('id', $break['id'])->first();
                     if ($existingBreak) {
@@ -195,7 +195,7 @@ class AdminController extends Controller
             DB::commit();
 
             return redirect()->route('admin.show', $attendance->id)->with('success', '勤怠情報を修正しました');
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             DB::rollBack();
 
             return back()->withErrors(['attendance' => '修正に失敗しました'])->withInput();
@@ -212,7 +212,7 @@ class AdminController extends Controller
             $stampRequestController->store($request, $attendance->id);
 
             return redirect()->route('admin.show', $attendance->id)->with('success', '修正申請を提出しました');
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             return back()->withErrors(['attendance' => '修正申請の作成に失敗しました'])->withInput();
         }
     }
@@ -251,7 +251,7 @@ class AdminController extends Controller
 
         $targetUser = User::findOrFail($id);
 
-        if (!$currentUser->canViewAttendance($targetUser->id)) {
+        if ($currentUser->canViewAttendance($targetUser->id) === false) {
             abort(403, 'アクセスが拒否されました');
         }
 

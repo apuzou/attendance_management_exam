@@ -44,7 +44,7 @@ class VerificationCodeRequest extends FormRequest
             /** @var User $user */
             $user = Auth::user();
 
-            if (!$user->verification_code) {
+            if ($user->verification_code === null || $user->verification_code === '') {
                 $validator->errors()->add('verification_code', '認証コードが見つかりません。再送信してください。');
                 return;
             }

@@ -8,9 +8,9 @@
 
 @section('content')
 <div class="container correction-container">
-    <div class="title">
+    <h2 class="title">
         <span class="title-bar">|</span>申請一覧
-    </div>
+    </h2>
 
     <div class="correction-tabs">
         <a href="{{ route('correction.index') }}" class="correction-tab {{ ($tab ?? 'pending') !== 'approved' ? 'correction-tab--active' : '' }}">承認待ち</a>
