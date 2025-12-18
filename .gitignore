@@ -1,6 +1,4 @@
-# MySQL data files
 docker/mysql/data/*
 !docker/mysql/data/.gitkeep
 
-# Cursor IDE settings (keep locally, exclude from repository)
 .cursor/
