@@ -1,4 +1,6 @@
 # MySQL data files
 docker/mysql/data/*
 !docker/mysql/data/.gitkeep
+src/docker/mysql/data/*
+!src/docker/mysql/data/.gitkeep
 
