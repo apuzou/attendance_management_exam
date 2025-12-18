@@ -72,9 +72,11 @@ php artisan db:seed
 - `stamp_correction_requests` - 打刻修正申請情報（元の値・修正後の値を記録）
 - `break_correction_requests` - 休憩時間修正申請情報（元の値・修正後の値を記録、新規追加時は`break_time_id`が null）
 
-## ER 図
+## ER図
 
-<!-- ER図を挿入 -->
+
+<img width="951" height="1531" alt="attendance_er" src="https://github.com/user-attachments/assets/29f663e7-36ca-481c-897f-5ca33c6a1911" />
+
 
 ## 主要機能
 
