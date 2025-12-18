@@ -67,10 +67,10 @@ php artisan db:seed
 以下のテーブルが存在します：
 
 - `users` - ユーザー情報（権限、部門コード含む）
-- `attendances` - 勤怠情報
+- `attendances` - 勤怠情報（最終更新者・最終更新日時含む）
 - `break_times` - 休憩時間情報
-- `stamp_correction_requests` - 打刻修正申請情報
-- `break_correction_requests` - 休憩時間修正申請情報
+- `stamp_correction_requests` - 打刻修正申請情報（元の値・修正後の値を記録）
+- `break_correction_requests` - 休憩時間修正申請情報（元の値・修正後の値を記録、新規追加時は`break_time_id`が null）
 
 ## ER 図
 
@@ -110,7 +110,8 @@ php artisan db:seed
 
 - **修正申請一覧**
   - 自分の修正申請一覧表示
-  - 申請状態の確認（承認待ち、承認済み、却下）
+  - 申請状態の確認（承認待ち、承認済み）
+  - タブによる切り替え表示（承認待ち/承認済み）
 
 ### 管理者機能
 
@@ -120,22 +121,49 @@ php artisan db:seed
   - 権限に応じたアクセス制御
 
 - **勤怠一覧（管理者）**
-  - 日別の全ユーザー勤怠一覧表示
+
+  - 日別の出勤者勤怠一覧表示
   - アクセス権限に応じた表示制御
     - 全アクセス権限：全ユーザーの勤怠を表示
     - 部門アクセス権限：同じ部門のメンバーの勤怠のみ表示
   - 日付の切り替え機能（前日/翌日）
+  - カレンダーによる日付選択機能
+
+- **勤怠詳細（管理者）**
+
+  - 選択スタッフの選択日の勤怠詳細表示
+  - 管理者による直接修正機能
+
+- **スタッフ一覧**
+
+  - 管理者管轄のスタッフ名簿一覧表示
+  - アクセス権限に応じた表示制御
+    - 全アクセス権限：全スタッフを表示
+    - 部門アクセス権限：同じ部門のメンバーのみ表示
+  - 各スタッフの月次勤怠へのリンク
+
+- **スタッフ別勤怠一覧**
+
+  - 選択スタッフの月次勤怠一覧表示
+  - 月の切り替え機能（前月/翌月）
+  - CSV 出力機能
+
+- **修正申請承認**
+  - 管理者管轄の修正申請一覧表示
+  - 修正申請の承認機能
+  - 承認後の勤怠データ反映
 
 ### 権限管理
 
 - **全アクセス権限**（`role='admin'` かつ `department_code=1`）
 
   - 全ユーザーの勤怠を参照・修正・承認可能
-  - 自身の承認も可能
+  - 自身の勤怠も直接修正可能
 
 - **部門アクセス権限**（`role='admin'` かつ `department_code!=1`）
 
-  - 同じ部門のメンバーの勤怠を参照・修正可能
+  - 同じ部門のメンバー（自身を含む）の勤怠を参照可能
+  - 自身以外のメンバーの勤怠を直接修正可能
   - 自身の承認は不可
 
 - **一般ユーザー**（`role='general'`）
@@ -146,16 +174,23 @@ php artisan db:seed
 
 ### アプリケーション
 
+**一般ユーザー向け**
+
 - ログイン画面: `http://localhost/login`
 - ユーザー登録: `http://localhost/register`
 - 勤怠打刻画面: `http://localhost/attendance`
 - 勤怠一覧: `http://localhost/attendance/list`
+- 勤怠詳細: `http://localhost/attendance/detail/{id}`
 - 修正申請一覧: `http://localhost/stamp_correction_request/list`
 
-### 管理者画面
+**管理者向け**
 
 - 管理者ログイン: `http://localhost/admin/login`
 - 管理者勤怠一覧: `http://localhost/admin/attendance/list`
+- 管理者勤怠詳細: `http://localhost/admin/attendance/{id}`
+- スタッフ一覧: `http://localhost/admin/staff/list`
+- スタッフ別勤怠一覧: `http://localhost/admin/attendance/staff/{id}`
+- 修正申請承認: `http://localhost/stamp_correction_request/approve/{attendance_correct_request_id}`
 
 ### 管理ツール
 
@@ -168,44 +203,48 @@ php artisan db:seed
 
 ```bash
 # シーディングを実行すると、以下のユーザーが作成されます
+# 各ユーザーには2025年11月分の勤怠データ（9日間の休日を含む）が自動生成されます
 
 # フルアクセス権限
-名前: 前田聖太
-メールアドレス: maeda@example.com
+名前: 高知太郎
+メールアドレス: admin@example.com
 パスワード: password123
 権限: 全ユーザーの勤怠を参照・修正・承認可能
+部門コード: 1
 
 # 部門アクセス権限（管理者）
 名前: 佐藤花子
-メールアドレス: sato@example.com
+メールアドレス: a_admin@example.com
 パスワード: password123
-権限: 同じ部門のメンバーの勤怠を参照・修正可能（部門コード: 2）
+権限: A部門のメンバーの勤怠を参照・修正可能
+部門コード: 2
 
 名前: 鈴木一郎
-メールアドレス: suzuki@example.com
+メールアドレス: b_admin@example.com
 パスワード: password123
-権限: 同じ部門のメンバーの勤怠を参照・修正可能（部門コード: 3）
+権限: B部門のメンバーの勤怠を参照・修正可能
+部門コード: 3
 
 # 一般ユーザー
 名前: 田中太郎
 メールアドレス: tanaka@example.com
 パスワード: password123
-部門コード: 2
+部門コード: 2（A部門）
 
 名前: 山田花子
 メールアドレス: yamada@example.com
 パスワード: password123
-部門コード: 2
+部門コード: 2（A部門）
 
 名前: 高橋次郎
 メールアドレス: takahashi@example.com
 パスワード: password123
-部門コード: 3
+部門コード: 3（B部門）
 
 名前: 伊藤三郎
 メールアドレス: ito@example.com
 パスワード: password123
-部門コード: 3
+部門コード: 3（B部門）
 ```
 
 ## トラブルシューティング
@@ -275,20 +314,8 @@ php artisan migrate:refresh --path=database/migrations/2024_01_01_000002_create_
 - 管理者ログイン状態はセッションで管理（`is_admin_login`）
 - 通常ログインと管理者ログインで挙動が異なる
 
-### CSS コンポーネント化
-
-以下の共通コンポーネントが `public/css/components/` にあります：
-
-- `container.css` - コンテナスタイル
-- `table.css` - テーブルスタイル
-- `link.css` - リンクスタイル
-- `title.css` - タイトルスタイル
-- `message.css` - メッセージスタイル
-- `navigation.css` - ナビゲーションスタイル
-
 ### レスポンシブ対応
 
 - デスクトップファーストのアプローチ
-- メディアクエリ: `max-width: 1540px`, `1024px`, `768px`
+- メディアクエリ: `max-width: 1540px`, `1024px`, `768px`, `480px`
 - スタイルは各クラス定義にインラインで記述
-
