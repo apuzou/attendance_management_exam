@@ -13,7 +13,12 @@ class CreateUsersTable extends Migration
      */
     public function up()
     {
+        // Schemaクラスのcreateメソッドを呼ぶ
         Schema::create('users', function (Blueprint $table) {
+            //                                    ↑
+            //                    Blueprintクラスのインスタンス($table)
+
+            // Blueprintのインスタンスメソッドを呼ぶ
             $table->id();
             $table->string('name');
             $table->string('email')->unique();

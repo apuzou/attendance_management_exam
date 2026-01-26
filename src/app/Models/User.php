@@ -92,6 +92,13 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         $targetUser = self::find($targetUserId);
+        // 例：$targetUserId = 5 が渡された場合
+        // ↓実際の処理
+        // 1. データベースのusersテーブルを検索
+        // 2. WHERE id = 5 の条件でデータを取得
+        // 3. 見つかった場合：Userオブジェクトを作成して$targetUserに代入
+        // 4. 見つからない場合：null を$targetUserに代入
+
         if ($targetUser === null) {
             return false;
         }
