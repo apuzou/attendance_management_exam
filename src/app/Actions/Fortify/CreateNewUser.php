@@ -15,7 +15,7 @@ class CreateNewUser implements CreatesNewUsers
     /**
      * 新規ユーザーを作成
      * バリデーションはRegisterRequestフォームリクエストのルールとメッセージを使用
-     * 
+     *
      * @param array $input 入力データ
      * @return User 作成されたユーザー
      */
@@ -33,10 +33,13 @@ class CreateNewUser implements CreatesNewUsers
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
-            'role' => 'general',
             'verification_code' => $verificationCode,
             'verification_code_expires_at' => now()->addMinutes(30),
         ]);
+
+        // 一括代入できない属性（role）は直接代入で設定
+        $user->role = 'general';
+        $user->save();
 
         // 認証コードメールを送信
         Mail::to($user->email)->send(new VerificationCodeMail($user, $verificationCode));

@@ -8,6 +8,7 @@ use App\Http\Controllers\StampCorrectionRequestController;
 use App\Models\Attendance;
 use App\Models\BreakTime;
 use App\Models\StampCorrectionRequest;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,7 +31,7 @@ class AttendanceController extends Controller
             ->with('breakTimes')
             ->first();
 
-        $status = $this->getStatus($attendance);
+        $status = $attendance ? $attendance->getStatus() : Attendance::getStatusForNull();
         $currentTime = Carbon::now();
 
         return view('home', [
@@ -43,7 +44,8 @@ class AttendanceController extends Controller
 
     /**
      * 打刻処理を実行
-     * 出勤/退勤/休憩開始/休憩終了の各打刻を処理し、状態遷移の整合性をチェック
+     * 出勤/退勤/休憩開始/休憩終了の各打刻を処理
+     * バリデーションはStampRequestで行われる
      */
     public function store(StampRequest $request)
     {
@@ -62,66 +64,19 @@ class AttendanceController extends Controller
             // 打刻タイプに応じて処理を分岐
             switch ($request->stamp_type) {
                 case 'clock_in':
-                    if ($attendance && $attendance->clock_in) {
-                        return back()->withErrors(['stamp_type' => '既に出勤しています']);
-                    }
-
-                    if ($attendance === null) {
-                        $attendance = Attendance::create([
-                            'user_id' => $user->id,
-                            'date' => $today,
-                            'clock_in' => $now->format('H:i:s'),
-                        ]);
-                    } else {
-                        $attendance->update([
-                            'clock_in' => $now->format('H:i:s'),
-                        ]);
-                    }
+                    $this->handleClockIn($attendance, $today, $now, $user);
                     break;
 
                 case 'break_start':
+                    $this->handleBreakStart($attendance, $now);
+                    break;
+
                 case 'break_end':
+                    $this->handleBreakEnd($attendance, $now);
+                    break;
+
                 case 'clock_out':
-                    if ($attendance === null || $attendance->clock_in === null) {
-                        return back()->withErrors(['stamp_type' => 'まだ出勤していません']);
-                    }
-
-                    if ($request->stamp_type !== 'break_end' && $attendance->clock_out) {
-                        return back()->withErrors(['stamp_type' => '既に退勤しています']);
-                    }
-
-                    // 現在アクティブな休憩（終了時刻が未設定）を取得
-                    $activeBreak = BreakTime::where('attendance_id', $attendance->id)
-                        ->whereNotNull('break_start')
-                        ->whereNull('break_end')
-                        ->first();
-
-                    if ($request->stamp_type === 'break_start') {
-                        if ($activeBreak) {
-                            return back()->withErrors(['stamp_type' => '既に休憩中です']);
-                        }
-
-                        BreakTime::create([
-                            'attendance_id' => $attendance->id,
-                            'break_start' => $now->format('H:i:s'),
-                        ]);
-                    } elseif ($request->stamp_type === 'break_end') {
-                        if ($activeBreak === null) {
-                            return back()->withErrors(['stamp_type' => '休憩中ではありません']);
-                        }
-
-                        $activeBreak->update([
-                            'break_end' => $now->format('H:i:s'),
-                        ]);
-                    } elseif ($request->stamp_type === 'clock_out') {
-                        if ($activeBreak) {
-                            return back()->withErrors(['stamp_type' => '休憩を終了してから退勤してください']);
-                        }
-
-                        $attendance->update([
-                            'clock_out' => $now->format('H:i:s'),
-                        ]);
-                    }
+                    $this->handleClockOut($attendance, $now);
                     break;
             }
 
@@ -136,35 +91,58 @@ class AttendanceController extends Controller
     }
 
     /**
-     * 現在の勤怠状態を取得
-     * 勤務外/出勤中/休憩中/退勤済のいずれかを返す
+     * 出勤打刻を処理
      */
-    private function getStatus($attendance): string
+    private function handleClockIn(?Attendance $attendance, Carbon $today, Carbon $now, Authenticatable $user): void
     {
-        // 勤怠レコードが存在しない、または出勤時刻が未設定の場合は勤務外
-        if ($attendance === null || $attendance->clock_in === null) {
-            return '勤務外';
+        if ($attendance === null) {
+            $attendance = Attendance::create([
+                'date' => $today,
+                'clock_in' => $now->format('H:i:s'),
+            ]);
+            // 一括代入できない属性（user_id）は直接代入で設定
+            $attendance->user_id = $user->id;
+            $attendance->save();
+        } else {
+            $attendance->update([
+                'clock_in' => $now->format('H:i:s'),
+            ]);
         }
-
-        // 退勤時刻が設定されている場合は退勤済
-        if ($attendance->clock_out) {
-            return '退勤済';
-        }
-
-        // アクティブな休憩（終了時刻が未設定）を検索
-        $activeBreak = BreakTime::where('attendance_id', $attendance->id)
-            ->whereNotNull('break_start')
-            ->whereNull('break_end')
-            ->first();
-
-        // アクティブな休憩が存在する場合は休憩中
-        if ($activeBreak) {
-            return '休憩中';
-        }
-
-        // 上記以外（出勤済みで退勤していない場合）は出勤中
-        return '出勤中';
     }
+
+    /**
+     * 休憩開始打刻を処理
+     */
+    private function handleBreakStart(Attendance $attendance, Carbon $now): void
+    {
+        $breakTime = new BreakTime([
+            'break_start' => $now->format('H:i:s'),
+        ]);
+        $breakTime->attendance_id = $attendance->id;
+        $breakTime->save();
+    }
+
+    /**
+     * 休憩終了打刻を処理
+     */
+    private function handleBreakEnd(Attendance $attendance, Carbon $now): void
+    {
+        $activeBreak = $attendance->getActiveBreak();
+        $activeBreak->update([
+            'break_end' => $now->format('H:i:s'),
+        ]);
+    }
+
+    /**
+     * 退勤打刻を処理
+     */
+    private function handleClockOut(Attendance $attendance, Carbon $now): void
+    {
+        $attendance->update([
+            'clock_out' => $now->format('H:i:s'),
+        ]);
+    }
+
 
     /**
      * 勤怠一覧画面を表示

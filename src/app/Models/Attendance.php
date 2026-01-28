@@ -18,15 +18,13 @@ class Attendance extends Model
 
     /**
      * 一括代入可能な属性
+     * user_id, last_modified_by, last_modified_atはセキュリティ上の理由で一括代入不可（直接代入で設定）
      */
     protected $fillable = [
-        'user_id',
         'date',
         'clock_in',
         'clock_out',
         'note',
-        'last_modified_by',
-        'last_modified_at',
     ];
 
     /**
@@ -67,6 +65,65 @@ class Attendance extends Model
     public function stampCorrectionRequests(): HasMany
     {
         return $this->hasMany(StampCorrectionRequest::class);
+    }
+
+    /**
+     * 現在の勤怠状態(ステータス)の判定
+     * 勤務外/出勤中/休憩中/退勤済のいずれかを返す
+     */
+    public function getStatus(): string
+    {
+        // 出勤時刻が未設定の場合は勤務外
+        if ($this->clock_in === null) {
+            return '勤務外';
+        }
+
+        // 退勤時刻が設定されている場合は退勤済
+        if ($this->clock_out) {
+            return '退勤済';
+        }
+
+        // アクティブな休憩（終了時刻が未設定）を検索
+        // リレーションを活用（eager loading済みの場合も考慮）
+        $activeBreak = $this->breakTimes
+            ->whereNotNull('break_start')
+            ->whereNull('break_end')
+            ->first();
+
+        // アクティブな休憩が存在する場合は休憩中
+        if ($activeBreak) {
+            return '休憩中';
+        }
+
+        // 上記以外（出勤済みで退勤していない場合）は出勤中
+        return '出勤中';
+    }
+
+    /**
+     * 静的メソッド：勤怠レコードが存在しない場合の状態を取得
+     */
+    public static function getStatusForNull(): string
+    {
+        return '勤務外';
+    }
+
+    /**
+     * アクティブな休憩（終了時刻が未設定）を取得
+     */
+    public function getActiveBreak(): ?BreakTime
+    {
+        return $this->breakTimes
+            ->whereNotNull('break_start')
+            ->whereNull('break_end')
+            ->first();
+    }
+
+    /**
+     * IDで休憩時間を検索
+     */
+    public function findBreakById(int $breakId): ?BreakTime
+    {
+        return $this->breakTimes->where('id', $breakId)->first();
     }
 
     /**
@@ -136,4 +193,3 @@ class Attendance extends Model
         return sprintf('%d:%02d', $hours, $minutes);
     }
 }
-

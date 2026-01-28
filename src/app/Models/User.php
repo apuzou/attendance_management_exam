@@ -20,13 +20,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * 一括代入可能な属性
+     * roleとdepartment_codeはセキュリティ上の理由で一括代入不可（直接代入で設定）
      */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role',
-        'department_code',
         'email_verified_at',
         'verification_code',
         'verification_code_expires_at',
@@ -119,7 +118,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * 自身の承認ができるかを判定
-     * 部門アクセス権限を持つ管理者は自身の承認ができない
+     * 部門管理者は自身の承認ができない
      */
     public function canApproveOwnRequest(): bool
     {

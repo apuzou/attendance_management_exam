@@ -48,9 +48,10 @@ class TestCase16Test extends TestCase
     public function test_verification_guidance_button_navigates_to_verification_code_screen()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => null,
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $response = $this->actingAs($user)->get('/email/verify');
 
@@ -71,11 +72,12 @@ class TestCase16Test extends TestCase
     {
         $verificationCode = '123456';
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => null,
             'verification_code' => $verificationCode,
             'verification_code_expires_at' => now()->addMinutes(30),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $response = $this->actingAs($user)->post('/email/verify', [
             'verification_code' => $verificationCode,

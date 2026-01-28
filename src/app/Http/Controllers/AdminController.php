@@ -153,9 +153,11 @@ class AdminController extends Controller
                 'clock_in' => $correctedClockIn,
                 'clock_out' => $correctedClockOut,
                 'note' => trim($request->note),
-                'last_modified_by' => $currentUser->id,
-                'last_modified_at' => Carbon::now(),
             ]);
+            // 一括代入できない属性（last_modified_by, last_modified_at）は直接代入で設定
+            $attendance->last_modified_by = $currentUser->id;
+            $attendance->last_modified_at = Carbon::now();
+            $attendance->save();
 
             // 休憩時間の更新
             $breakTimes = $request->break_times ?? [];

@@ -20,12 +20,10 @@ class BreakCorrectionRequest extends Model
 
     /**
      * 一括代入可能な属性
+     * stamp_correction_request_id, break_time_id, original_break_start, original_break_endは
+     * セキュリティ上の理由で一括代入不可（直接代入で設定）
      */
     protected $fillable = [
-        'stamp_correction_request_id',
-        'break_time_id',
-        'original_break_start',
-        'original_break_end',
         'corrected_break_start',
         'corrected_break_end',
     ];

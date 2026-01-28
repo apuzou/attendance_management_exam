@@ -23,23 +23,26 @@ class TestCase9To11Test extends TestCase
     public function test_attendance_list_displays_all_user_attendances()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance1 = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->subDays(2)->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance1->user_id = $user->id;
+        $attendance1->save();
 
         $attendance2 = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->subDay()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance2->user_id = $user->id;
+        $attendance2->save();
 
         $response = $this->actingAs($user)->get('/attendance/list');
 
@@ -56,9 +59,10 @@ class TestCase9To11Test extends TestCase
     public function test_attendance_list_displays_current_month_by_default()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $response = $this->actingAs($user)->get('/attendance/list');
 
@@ -75,9 +79,10 @@ class TestCase9To11Test extends TestCase
     public function test_attendance_list_displays_previous_month_when_prev_button_clicked()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $prevMonth = now()->subMonth()->format('Y-m');
         $response = $this->actingAs($user)->get('/attendance/list?month=' . $prevMonth);
@@ -95,9 +100,10 @@ class TestCase9To11Test extends TestCase
     public function test_attendance_list_displays_next_month_when_next_button_clicked()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $nextMonth = now()->addMonth()->format('Y-m');
         $response = $this->actingAs($user)->get('/attendance/list?month=' . $nextMonth);
@@ -115,16 +121,18 @@ class TestCase9To11Test extends TestCase
     public function test_attendance_list_detail_button_navigates_to_detail_screen()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->get('/attendance/detail/' . $attendance->id);
 
@@ -143,16 +151,16 @@ class TestCase9To11Test extends TestCase
     {
         $user = User::factory()->create([
             'name' => 'テストユーザー',
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->get('/attendance/detail/' . $attendance->id);
 
@@ -167,17 +175,19 @@ class TestCase9To11Test extends TestCase
     public function test_attendance_detail_displays_selected_date()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $date = now()->subDay()->toDateString();
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => $date,
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->get('/attendance/detail/' . $attendance->id);
 
@@ -193,16 +203,18 @@ class TestCase9To11Test extends TestCase
     public function test_attendance_detail_displays_clock_in_out_times()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->get('/attendance/detail/' . $attendance->id);
 
@@ -218,22 +230,25 @@ class TestCase9To11Test extends TestCase
     public function test_attendance_detail_displays_break_times()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
-        BreakTime::create([
-            'attendance_id' => $attendance->id,
+        $breakTime = new BreakTime([
             'break_start' => '12:00:00',
             'break_end' => '13:00:00',
         ]);
+        $breakTime->attendance_id = $attendance->id;
+        $breakTime->save();
 
         $response = $this->actingAs($user)->get('/attendance/detail/' . $attendance->id);
 
@@ -249,16 +264,18 @@ class TestCase9To11Test extends TestCase
     public function test_correction_validation_clock_in_after_clock_out_shows_error()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->post('/attendance/detail/' . $attendance->id, [
             'corrected_clock_in' => '19:00',
@@ -280,16 +297,18 @@ class TestCase9To11Test extends TestCase
     public function test_correction_validation_break_start_invalid_shows_error()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->post('/attendance/detail/' . $attendance->id, [
             'corrected_clock_in' => '09:00',
@@ -316,16 +335,18 @@ class TestCase9To11Test extends TestCase
     public function test_correction_validation_break_end_invalid_shows_error()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->post('/attendance/detail/' . $attendance->id, [
             'corrected_clock_in' => '09:00',
@@ -352,16 +373,18 @@ class TestCase9To11Test extends TestCase
     public function test_correction_validation_note_required_shows_error()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->post('/attendance/detail/' . $attendance->id, [
             'corrected_clock_in' => '09:00',
@@ -383,16 +406,18 @@ class TestCase9To11Test extends TestCase
     public function test_correction_request_processing_succeeds()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->post('/attendance/detail/' . $attendance->id, [
             'corrected_clock_in' => '09:30',
@@ -417,72 +442,80 @@ class TestCase9To11Test extends TestCase
     public function test_correction_list_displays_pending_requests()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $otherUser = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $otherUser->role = 'general';
+        $otherUser->save();
 
         $attendance1 = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->subDays(2)->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance1->user_id = $user->id;
+        $attendance1->save();
 
-        $correctionRequest1 = StampCorrectionRequest::create([
-            'attendance_id' => $attendance1->id,
-            'user_id' => $user->id,
-            'request_date' => now()->subDays(2)->toDateString(),
-            'original_clock_in' => '09:00:00',
-            'original_clock_out' => '18:00:00',
+        $correctionRequest1 = new StampCorrectionRequest([
             'corrected_clock_in' => '09:30:00',
             'corrected_clock_out' => '18:30:00',
             'note' => 'テスト備考1',
-            'approved_at' => null,
         ]);
+        $correctionRequest1->attendance_id = $attendance1->id;
+        $correctionRequest1->user_id = $user->id;
+        $correctionRequest1->request_date = now()->subDays(2)->toDateString();
+        $correctionRequest1->original_clock_in = '09:00:00';
+        $correctionRequest1->original_clock_out = '18:00:00';
+        $correctionRequest1->approved_at = null;
+        $correctionRequest1->save();
 
         $attendance2 = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->subDay()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance2->user_id = $user->id;
+        $attendance2->save();
 
-        $correctionRequest2 = StampCorrectionRequest::create([
-            'attendance_id' => $attendance2->id,
-            'user_id' => $user->id,
-            'request_date' => now()->subDay()->toDateString(),
-            'original_clock_in' => '09:00:00',
-            'original_clock_out' => '18:00:00',
+        $correctionRequest2 = new StampCorrectionRequest([
             'corrected_clock_in' => '10:00:00',
             'corrected_clock_out' => '19:00:00',
             'note' => 'テスト備考2',
-            'approved_at' => null,
         ]);
+        $correctionRequest2->attendance_id = $attendance2->id;
+        $correctionRequest2->user_id = $user->id;
+        $correctionRequest2->request_date = now()->subDay()->toDateString();
+        $correctionRequest2->original_clock_in = '09:00:00';
+        $correctionRequest2->original_clock_out = '18:00:00';
+        $correctionRequest2->approved_at = null;
+        $correctionRequest2->save();
 
         // 他のユーザーの承認待ち申請（表示されないことを確認するため）
         $otherAttendance = Attendance::create([
-            'user_id' => $otherUser->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $otherAttendance->user_id = $otherUser->id;
+        $otherAttendance->save();
 
-        $otherCorrectionRequest = StampCorrectionRequest::create([
-            'attendance_id' => $otherAttendance->id,
-            'user_id' => $otherUser->id,
-            'request_date' => now()->toDateString(),
-            'original_clock_in' => '09:00:00',
-            'original_clock_out' => '18:00:00',
+        $otherCorrectionRequest = new StampCorrectionRequest([
             'corrected_clock_in' => '09:30:00',
             'corrected_clock_out' => '18:30:00',
             'note' => '他のユーザーの備考',
-            'approved_at' => null,
         ]);
+        $otherCorrectionRequest->attendance_id = $otherAttendance->id;
+        $otherCorrectionRequest->user_id = $otherUser->id;
+        $otherCorrectionRequest->request_date = now()->toDateString();
+        $otherCorrectionRequest->original_clock_in = '09:00:00';
+        $otherCorrectionRequest->original_clock_out = '18:00:00';
+        $otherCorrectionRequest->approved_at = null;
+        $otherCorrectionRequest->save();
 
         $response = $this->actingAs($user)->get('/stamp_correction_request/list');
 
@@ -501,71 +534,79 @@ class TestCase9To11Test extends TestCase
     public function test_correction_list_displays_approved_requests()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $otherUser = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $otherUser->role = 'general';
+        $otherUser->save();
 
         $attendance1 = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->subDays(2)->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance1->user_id = $user->id;
+        $attendance1->save();
 
-        $correctionRequest1 = StampCorrectionRequest::create([
-            'attendance_id' => $attendance1->id,
-            'user_id' => $user->id,
-            'request_date' => now()->subDays(2)->toDateString(),
-            'original_clock_in' => '09:00:00',
-            'original_clock_out' => '18:00:00',
+        $correctionRequest1 = new StampCorrectionRequest([
             'corrected_clock_in' => '09:30:00',
             'corrected_clock_out' => '18:30:00',
             'note' => 'テスト備考1',
-            'approved_at' => now()->subDays(2),
         ]);
+        $correctionRequest1->attendance_id = $attendance1->id;
+        $correctionRequest1->user_id = $user->id;
+        $correctionRequest1->request_date = now()->subDays(2)->toDateString();
+        $correctionRequest1->original_clock_in = '09:00:00';
+        $correctionRequest1->original_clock_out = '18:00:00';
+        $correctionRequest1->approved_at = now()->subDays(2);
+        $correctionRequest1->save();
 
         $attendance2 = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->subDay()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance2->user_id = $user->id;
+        $attendance2->save();
 
-        $correctionRequest2 = StampCorrectionRequest::create([
-            'attendance_id' => $attendance2->id,
-            'user_id' => $user->id,
-            'request_date' => now()->subDay()->toDateString(),
-            'original_clock_in' => '09:00:00',
-            'original_clock_out' => '18:00:00',
+        $correctionRequest2 = new StampCorrectionRequest([
             'corrected_clock_in' => '10:00:00',
             'corrected_clock_out' => '19:00:00',
             'note' => 'テスト備考2',
-            'approved_at' => now()->subDay(),
         ]);
+        $correctionRequest2->attendance_id = $attendance2->id;
+        $correctionRequest2->user_id = $user->id;
+        $correctionRequest2->request_date = now()->subDay()->toDateString();
+        $correctionRequest2->original_clock_in = '09:00:00';
+        $correctionRequest2->original_clock_out = '18:00:00';
+        $correctionRequest2->approved_at = now()->subDay();
+        $correctionRequest2->save();
 
         $otherAttendance = Attendance::create([
-            'user_id' => $otherUser->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $otherAttendance->user_id = $otherUser->id;
+        $otherAttendance->save();
 
-        $otherCorrectionRequest = StampCorrectionRequest::create([
-            'attendance_id' => $otherAttendance->id,
-            'user_id' => $otherUser->id,
-            'request_date' => now()->toDateString(),
-            'original_clock_in' => '09:00:00',
-            'original_clock_out' => '18:00:00',
+        $otherCorrectionRequest = new StampCorrectionRequest([
             'corrected_clock_in' => '09:30:00',
             'corrected_clock_out' => '18:30:00',
             'note' => '他のユーザーの備考',
-            'approved_at' => now(),
         ]);
+        $otherCorrectionRequest->attendance_id = $otherAttendance->id;
+        $otherCorrectionRequest->user_id = $otherUser->id;
+        $otherCorrectionRequest->request_date = now()->toDateString();
+        $otherCorrectionRequest->original_clock_in = '09:00:00';
+        $otherCorrectionRequest->original_clock_out = '18:00:00';
+        $otherCorrectionRequest->approved_at = now();
+        $otherCorrectionRequest->save();
 
         $response = $this->actingAs($user)->get('/stamp_correction_request/list?tab=approved');
 
@@ -583,28 +624,31 @@ class TestCase9To11Test extends TestCase
     public function test_correction_list_detail_button_navigates_to_attendance_detail_screen()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => '09:00:00',
             'clock_out' => '18:00:00',
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
-        $correctionRequest = StampCorrectionRequest::create([
-            'attendance_id' => $attendance->id,
-            'user_id' => $user->id,
-            'request_date' => now()->toDateString(),
-            'original_clock_in' => '09:00:00',
-            'original_clock_out' => '18:00:00',
+        $correctionRequest = new StampCorrectionRequest([
             'corrected_clock_in' => '09:30:00',
             'corrected_clock_out' => '18:30:00',
             'note' => 'テスト備考',
-            'approved_at' => null,
         ]);
+        $correctionRequest->attendance_id = $attendance->id;
+        $correctionRequest->user_id = $user->id;
+        $correctionRequest->request_date = now()->toDateString();
+        $correctionRequest->original_clock_in = '09:00:00';
+        $correctionRequest->original_clock_out = '18:00:00';
+        $correctionRequest->approved_at = null;
+        $correctionRequest->save();
 
         $response = $this->actingAs($user)->get('/attendance/detail/' . $attendance->id);
 

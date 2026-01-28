@@ -81,19 +81,20 @@ class UserSeeder extends Seeder
                 [
                     'name' => $userData['name'],
                     'password' => Hash::make($userData['password']),
-                    'role' => $userData['role'],
-                    'department_code' => $userData['department_code'],
                     'email_verified_at' => now(), // シーダーで作成するユーザーは認証済みとする
                 ]
             );
 
-            // 既存ユーザーの場合、パスワードとdepartment_codeを更新（再実行時に最新の設定を反映）
+            // 一括代入できない属性（role, department_code）は直接代入で設定
+            $user->role = $userData['role'];
+            $user->department_code = $userData['department_code'];
+
+            // 既存ユーザーの場合、パスワードも更新（再実行時に最新の設定を反映）
             if ($user->wasRecentlyCreated === false) {
-                $user->update([
-                    'password' => Hash::make($userData['password']),
-                    'department_code' => $userData['department_code'],
-                ]);
+                $user->password = Hash::make($userData['password']);
             }
+
+            $user->save();
 
             // 作成・取得したユーザー情報を配列に保存（後で勤怠データ作成時に使用）
             $createdUsers[] = [
@@ -130,12 +131,14 @@ class UserSeeder extends Seeder
                 
                 // 勤怠レコードを作成（出勤・退勤時刻を含む）
                 $attendance = Attendance::create([
-                    'user_id' => $user->id,
                     'date' => $currentDate->toDateString(),
                     'clock_in' => $clockIn->format('H:i:s'),
                     'clock_out' => $clockOut->format('H:i:s'),
                     'note' => null,
                 ]);
+                // 一括代入できない属性（user_id）は直接代入で設定
+                $attendance->user_id = $user->id;
+                $attendance->save();
                 
                 // 休憩時間を2〜3回で合計1時間（60分）になるように作成（出勤と退勤の間に均等に分散）
                 $this->createBreakTimes($attendance, $clockIn, $clockOut);
@@ -189,7 +192,7 @@ class UserSeeder extends Seeder
 
     /**
      * ランダムな休日を取得（土日を含めて合計指定数だけ選択）
-     * 
+     *
      * @param Carbon $startDate 開始日
      * @param Carbon $endDate 終了日
      * @param int $count 選択する休日の日数
@@ -298,11 +301,12 @@ class UserSeeder extends Seeder
             $breakEndTime = Carbon::createFromTime(0, 0, 0)->addMinutes($breakEnd);
             
             // 休憩時間レコードを作成
-            BreakTime::create([
-                'attendance_id' => $attendance->id,
+            $breakTime = new BreakTime([
                 'break_start' => $breakStartTime->format('H:i:s'),
                 'break_end' => $breakEndTime->format('H:i:s'),
             ]);
+            $breakTime->attendance_id = $attendance->id;
+            $breakTime->save();
             
             // 次の休憩位置を計算（現在の休憩終了後、間隔を空ける）
             $currentMinute = $breakEnd + $interval;

@@ -23,9 +23,10 @@ class TestCase4To8Test extends TestCase
     public function test_attendance_screen_displays_current_datetime()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $response = $this->actingAs($user)->get('/attendance');
 
@@ -48,9 +49,10 @@ class TestCase4To8Test extends TestCase
     public function test_status_displays_off_duty_when_no_attendance()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $response = $this->actingAs($user)->get('/attendance');
 
@@ -66,15 +68,17 @@ class TestCase4To8Test extends TestCase
     public function test_status_displays_on_duty_when_clocked_in()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => now()->format('H:i:s'),
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->get('/attendance');
 
@@ -90,21 +94,24 @@ class TestCase4To8Test extends TestCase
     public function test_status_displays_on_break_when_on_break()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => now()->subHour()->format('H:i:s'),
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
-        BreakTime::create([
-            'attendance_id' => $attendance->id,
+        $breakTime = new BreakTime([
             'break_start' => now()->subMinutes(30)->format('H:i:s'),
             'break_end' => null,
         ]);
+        $breakTime->attendance_id = $attendance->id;
+        $breakTime->save();
 
         $response = $this->actingAs($user)->get('/attendance');
 
@@ -120,16 +127,18 @@ class TestCase4To8Test extends TestCase
     public function test_status_displays_left_work_when_clocked_out()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => now()->subHours(9)->format('H:i:s'),
             'clock_out' => now()->format('H:i:s'),
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->get('/attendance');
 
@@ -145,9 +154,10 @@ class TestCase4To8Test extends TestCase
     public function test_clock_in_button_functions_correctly()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $response = $this->actingAs($user)->get('/attendance');
         $response->assertStatus(200);
@@ -183,16 +193,18 @@ class TestCase4To8Test extends TestCase
     public function test_clock_in_can_only_be_done_once_per_day()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
-        Attendance::create([
-            'user_id' => $user->id,
+        $attendance = Attendance::create([
             'date' => now()->toDateString(),
             'clock_in' => now()->subHours(9)->format('H:i:s'),
             'clock_out' => now()->format('H:i:s'),
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->get('/attendance');
         $response->assertStatus(200);
@@ -206,9 +218,10 @@ class TestCase4To8Test extends TestCase
     public function test_clock_in_time_displayed_on_attendance_list()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $this->actingAs($user)->post('/attendance', [
             'stamp_type' => 'clock_in',
@@ -232,15 +245,17 @@ class TestCase4To8Test extends TestCase
     public function test_break_start_button_functions_correctly()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
-        Attendance::create([
-            'user_id' => $user->id,
+        $attendance = Attendance::create([
             'date' => now()->toDateString(),
             'clock_in' => now()->subHour()->format('H:i:s'),
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->get('/attendance');
         $response->assertStatus(200);
@@ -276,15 +291,17 @@ class TestCase4To8Test extends TestCase
     public function test_break_can_be_taken_multiple_times_per_day()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => now()->subHours(2)->format('H:i:s'),
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $this->actingAs($user)->post('/attendance', [
             'stamp_type' => 'break_start',
@@ -306,15 +323,17 @@ class TestCase4To8Test extends TestCase
     public function test_break_end_button_functions_correctly()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => now()->subHour()->format('H:i:s'),
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $this->actingAs($user)->post('/attendance', [
             'stamp_type' => 'break_start',
@@ -343,15 +362,17 @@ class TestCase4To8Test extends TestCase
     public function test_break_end_can_be_done_multiple_times_per_day()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => now()->subHours(2)->format('H:i:s'),
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $this->actingAs($user)->post('/attendance', [
             'stamp_type' => 'break_start',
@@ -377,15 +398,17 @@ class TestCase4To8Test extends TestCase
     public function test_break_time_displayed_on_attendance_list()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $attendance = Attendance::create([
-            'user_id' => $user->id,
             'date' => now()->toDateString(),
             'clock_in' => now()->subHours(2)->format('H:i:s'),
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $this->actingAs($user)->post('/attendance', [
             'stamp_type' => 'break_start',
@@ -409,15 +432,17 @@ class TestCase4To8Test extends TestCase
     public function test_clock_out_button_functions_correctly()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
-        Attendance::create([
-            'user_id' => $user->id,
+        $attendance = Attendance::create([
             'date' => now()->toDateString(),
             'clock_in' => now()->subHour()->format('H:i:s'),
         ]);
+        $attendance->user_id = $user->id;
+        $attendance->save();
 
         $response = $this->actingAs($user)->get('/attendance');
         $response->assertStatus(200);
@@ -448,9 +473,10 @@ class TestCase4To8Test extends TestCase
     public function test_clock_out_time_displayed_on_attendance_list()
     {
         $user = User::factory()->create([
-            'role' => 'general',
             'email_verified_at' => now(),
         ]);
+        $user->role = 'general';
+        $user->save();
 
         $this->actingAs($user)->post('/attendance', [
             'stamp_type' => 'clock_in',

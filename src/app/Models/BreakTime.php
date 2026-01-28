@@ -16,9 +16,9 @@ class BreakTime extends Model
 
     /**
      * 一括代入可能な属性
+     * attendance_idはセキュリティ上の理由で一括代入不可（直接代入で設定）
      */
     protected $fillable = [
-        'attendance_id',
         'break_start',
         'break_end',
     ];
