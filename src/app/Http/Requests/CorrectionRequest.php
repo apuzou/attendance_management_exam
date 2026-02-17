@@ -47,7 +47,7 @@ class CorrectionRequest extends FormRequest
     /**
      * リクエストの認可を判定する。
      *
-     * 管理者の場合は権限チェック、一般ユーザーの場合は自分の勤怠のみ許可する。
+     * AttendancePolicy::view に委譲する。
      *
      * @return bool 認可される場合true
      */
@@ -59,13 +59,7 @@ class CorrectionRequest extends FormRequest
             return false;
         }
 
-        if ($this->isAdminRequest()) {
-            /** @var \App\Models\User $user */
-            $user = Auth::user();
-            return $user->canViewAttendance($attendance->user_id);
-        }
-
-        return $attendance->user_id === Auth::id();
+        return $this->user()->can('view', $attendance);
     }
 
     /**

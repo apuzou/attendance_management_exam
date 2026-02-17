@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\User;
 use App\Models\StampCorrectionRequest;
-use App\Http\Controllers\StampCorrectionRequestController;
 use App\Http\Requests\CorrectionRequest;
+use App\Services\AttendanceCsvService;
+use App\Services\AttendanceUpdateService;
+use App\Services\CorrectionRequestService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Carbon\Carbon;
 
@@ -99,17 +100,11 @@ class AdminController extends Controller
      */
     public function show($id)
     {
-        $currentUser = Auth::user();
-
-        // 勤怠レコード取得（ユーザー情報、休憩時間、修正申請も一緒に取得）
         $attendance = Attendance::where('id', $id)
             ->with(['user', 'breakTimes', 'stampCorrectionRequests'])
             ->firstOrFail();
 
-        // 権限チェック（管理者が閲覧可能な勤怠かどうか 部門外の勤怠は閲覧不可、部門1のみ全閲覧可能）
-        if ($currentUser->canViewAttendance($attendance->user_id) === false) {
-            abort(403, 'アクセスが拒否されました');
-        }
+        $this->authorize('view', $attendance);
 
         // 承認待ちの修正申請があるかチェック
         $pendingRequest = StampCorrectionRequest::where('attendance_id', $attendance->id)
@@ -141,82 +136,31 @@ class AdminController extends Controller
     public function update(CorrectionRequest $request, $id)
     {
         $currentUser = Auth::user();
-
-        // 勤怠レコード取得（休憩時間も一緒に取得）
         $attendance = Attendance::where('id', $id)
             ->with(['breakTimes'])
             ->firstOrFail();
 
-        // 部門アクセス権限の管理者が自身の勤怠を修正する場合は申請として扱う
-        // フルアクセス権限の管理者は自身の直接修正が可能
-        if ($currentUser->role === 'admin' && $attendance->user_id === $currentUser->id && $currentUser->hasFullAccess() === false) {
+        if ($currentUser->cannot('update', $attendance)) {
             return $this->createCorrectionRequest($request, $attendance);
         }
 
-        // 承認待ちチェックはCorrectionRequestのwithValidator()で行われる
-
-        DB::beginTransaction();
-
         try {
-            // 出勤・退勤時刻の更新（入力がない場合は既存の値を維持）
-            $correctedClockIn = $request->filled('corrected_clock_in') && trim($request->corrected_clock_in) !== ''
-                ? Carbon::createFromFormat('H:i', trim($request->corrected_clock_in))->format('H:i:s')
-                : $attendance->clock_in;
+            $clockData = [
+                'corrected_clock_in' => $request->filled('corrected_clock_in') ? trim($request->corrected_clock_in) : null,
+                'corrected_clock_out' => $request->filled('corrected_clock_out') ? trim($request->corrected_clock_out) : null,
+                'note' => trim($request->note ?? ''),
+            ];
 
-            $correctedClockOut = $request->filled('corrected_clock_out') && trim($request->corrected_clock_out) !== ''
-                ? Carbon::createFromFormat('H:i', trim($request->corrected_clock_out))->format('H:i:s')
-                : $attendance->clock_out;
-
-            // 勤怠レコードを更新（最終更新者・最終更新日時も記録）
-            $attendance->update([
-                'clock_in' => $correctedClockIn,
-                'clock_out' => $correctedClockOut,
-                'note' => trim($request->note),
-                'last_modified_by' => $currentUser->id,
-                'last_modified_at' => Carbon::now(),
-            ]);
-
-            // 休憩時間の更新
-            $breakTimes = $request->break_times ?? [];
-            $existingBreakIds = []; // 更新・作成された休憩時間のIDを保持
-
-            foreach ($breakTimes as $break) {
-                $breakStart = isset($break['break_start']) && trim($break['break_start']) !== '' ? trim($break['break_start']) : null;
-                $breakEnd = isset($break['break_end']) && trim($break['break_end']) !== '' ? trim($break['break_end']) : null;
-
-                if ($breakStart === null || $breakEnd === null) {
-                    continue;
-                }
-
-                if (isset($break['id']) && $break['id'] !== '') {
-                    // 既存の休憩時間を更新
-                    $existingBreak = $attendance->breakTimes->where('id', $break['id'])->first();
-                    if ($existingBreak) {
-                        $existingBreak->update([
-                            'break_start' => Carbon::createFromFormat('H:i', $breakStart)->format('H:i:s'),
-                            'break_end' => Carbon::createFromFormat('H:i', $breakEnd)->format('H:i:s'),
-                        ]);
-                        $existingBreakIds[] = $existingBreak->id;
-                    }
-                } else {
-                    // 新規休憩時間を作成
-                    $newBreak = $attendance->breakTimes()->create([
-                        'break_start' => Carbon::createFromFormat('H:i', $breakStart)->format('H:i:s'),
-                        'break_end' => Carbon::createFromFormat('H:i', $breakEnd)->format('H:i:s'),
-                    ]);
-                    $existingBreakIds[] = $newBreak->id;
-                }
-            }
-
-            // 更新・作成された休憩時間に含まれない既存の休憩時間を削除
-            $attendance->breakTimes()->whereNotIn('id', $existingBreakIds)->delete();
-
-            DB::commit();
+            $attendanceUpdateService = app(AttendanceUpdateService::class);
+            $attendanceUpdateService->updateByAdmin(
+                $attendance,
+                $clockData,
+                $request->break_times ?? [],
+                $currentUser->id
+            );
 
             return redirect()->route('admin.show', $attendance->id)->with('success', '勤怠情報を修正しました');
         } catch (\Exception $exception) {
-            DB::rollBack();
-
             return back()->withErrors(['attendance' => '修正に失敗しました'])->withInput();
         }
     }
@@ -231,8 +175,8 @@ class AdminController extends Controller
     private function createCorrectionRequest(CorrectionRequest $request, Attendance $attendance)
     {
         try {
-            $stampRequestController = app(StampCorrectionRequestController::class);
-            $stampRequestController->store($request, $attendance->id);
+            $correctionRequestService = app(CorrectionRequestService::class);
+            $correctionRequestService->create($attendance, Auth::user(), $request->all());
 
             return redirect()->route('admin.show', $attendance->id)->with('success', '修正申請を提出しました');
         } catch (\Exception $exception) {
@@ -279,13 +223,11 @@ class AdminController extends Controller
      */
     public function list(Request $request, $id)
     {
-        $currentUser = Auth::user();
-
         $targetUser = User::findOrFail($id);
 
-        if ($currentUser->canViewAttendance($targetUser->id) === false) {
-            abort(403, 'アクセスが拒否されました');
-        }
+        $attendance = Attendance::where('user_id', $targetUser->id)->first();
+        $attendanceForAuth = $attendance ?? Attendance::make(['user_id' => $targetUser->id]);
+        $this->authorize('view', $attendanceForAuth);
 
         $month = $request->get('month', Carbon::now()->format('Y-m'));
         $currentMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
@@ -300,43 +242,10 @@ class AdminController extends Controller
         $prevMonth = $currentMonth->copy()->subMonth()->format('Y-m');
         $nextMonth = $currentMonth->copy()->addMonth()->format('Y-m');
 
-        // CSV出力機能（downloadパラメータがcsvの場合）
         if ($request->get('download') === 'csv') {
-            $filename = 'attendance_' . $targetUser->id . '_' . $currentMonth->format('Ymd') . '.csv';
-
-            $csvData = [];
-            $csvData[] = ['日付', '出勤時刻', '退勤時刻', '休憩時間', '実働時間'];
-
-            $daysInMonth = $currentMonth->daysInMonth;
-            $firstDay = $currentMonth->copy()->startOfMonth();
-
-            for ($day = 1; $day <= $daysInMonth; $day++) {
-                $currentDate = $firstDay->copy()->addDays($day - 1);
-                $attendance = $attendances->first(function ($att) use ($currentDate) {
-                    return $att->date->format('Y-m-d') === $currentDate->format('Y-m-d');
-                });
-
-                $csvData[] = [
-                    $currentDate->format('Y-m-d'),
-                    $attendance && $attendance->clock_in ? date('H:i', strtotime($attendance->clock_in)) : '',
-                    $attendance && $attendance->clock_out ? date('H:i', strtotime($attendance->clock_out)) : '',
-                    $attendance ? $attendance->getTotalBreakTime() : '',
-                    $attendance ? $attendance->getWorkTime() : '',
-                ];
-            }
-
-            // CSV出力（excelで開けるようにUTF-8 BOM付き）
-            $output = fopen('php://temp', 'r+');
-
-            fwrite($output, "\xEF\xBB\xBF");
-
-            foreach ($csvData as $row) {
-                fputcsv($output, $row);
-            }
-
-            rewind($output);
-            $csvContent = stream_get_contents($output);
-            fclose($output);
+            $attendanceCsvService = app(AttendanceCsvService::class);
+            $csvContent = $attendanceCsvService->generateMonthlyCsv($attendances, $currentMonth, $targetUser);
+            $filename = $attendanceCsvService->generateFilename($targetUser->id, $currentMonth);
 
             return Response::make($csvContent, 200, [
                 'Content-Type' => 'text/csv; charset=UTF-8',

@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StampRequest;
 use App\Http\Requests\CorrectionRequest;
-use App\Http\Controllers\StampCorrectionRequestController;
 use App\Models\Attendance;
 use App\Models\BreakTime;
 use App\Models\StampCorrectionRequest;
+use App\Services\CorrectionRequestService;
+use App\Services\StampService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
@@ -60,89 +60,15 @@ class AttendanceController extends Controller
     public function store(StampRequest $request)
     {
         $user = Auth::user();
-        $today = Carbon::today();
-        $now = Carbon::now();
-
-        DB::beginTransaction();
 
         try {
-            $attendance = Attendance::where('user_id', $user->id)
-                ->where('date', $today)
-                ->with('breakTimes')
-                ->first();
-
-            // 打刻タイプに応じて処理を分岐
-            switch ($request->stamp_type) {
-                case 'clock_in':
-                    if ($attendance && $attendance->clock_in) {
-                        return back()->withErrors(['stamp_type' => '既に出勤しています']);
-                    }
-
-                    if ($attendance === null) {
-                        $attendance = Attendance::create([
-                            'user_id' => $user->id,
-                            'date' => $today,
-                            'clock_in' => $now->format('H:i:s'),
-                        ]);
-                    } else {
-                        $attendance->update([
-                            'clock_in' => $now->format('H:i:s'),
-                        ]);
-                    }
-                    break;
-
-                case 'break_start':
-                case 'break_end':
-                case 'clock_out':
-                    if ($attendance === null || $attendance->clock_in === null) {
-                        return back()->withErrors(['stamp_type' => 'まだ出勤していません']);
-                    }
-
-                    if ($request->stamp_type !== 'break_end' && $attendance->clock_out) {
-                        return back()->withErrors(['stamp_type' => '既に退勤しています']);
-                    }
-
-                    // 現在アクティブな休憩（終了時刻が未設定）を取得
-                    $activeBreak = BreakTime::where('attendance_id', $attendance->id)
-                        ->whereNotNull('break_start')
-                        ->whereNull('break_end')
-                        ->first();
-
-                    if ($request->stamp_type === 'break_start') {
-                        if ($activeBreak) {
-                            return back()->withErrors(['stamp_type' => '既に休憩中です']);
-                        }
-
-                        BreakTime::create([
-                            'attendance_id' => $attendance->id,
-                            'break_start' => $now->format('H:i:s'),
-                        ]);
-                    } elseif ($request->stamp_type === 'break_end') {
-                        if ($activeBreak === null) {
-                            return back()->withErrors(['stamp_type' => '休憩中ではありません']);
-                        }
-
-                        $activeBreak->update([
-                            'break_end' => $now->format('H:i:s'),
-                        ]);
-                    } elseif ($request->stamp_type === 'clock_out') {
-                        if ($activeBreak) {
-                            return back()->withErrors(['stamp_type' => '休憩を終了してから退勤してください']);
-                        }
-
-                        $attendance->update([
-                            'clock_out' => $now->format('H:i:s'),
-                        ]);
-                    }
-                    break;
-            }
-
-            DB::commit();
+            $stampService = app(StampService::class);
+            $stampService->recordStamp($user, $request->stamp_type);
 
             return redirect()->route('attendance.index')->with('success', '打刻が完了しました');
-
+        } catch (\RuntimeException $exception) {
+            return back()->withErrors(['stamp_type' => $exception->getMessage()]);
         } catch (\Exception $exception) {
-            DB::rollBack();
             return back()->withErrors(['stamp_type' => '打刻処理に失敗しました']);
         }
     }
@@ -255,8 +181,13 @@ class AttendanceController extends Controller
     public function update(CorrectionRequest $request, $id)
     {
         try {
-            $stampRequestController = app(StampCorrectionRequestController::class);
-            $stampRequestController->store($request, $id);
+            $attendance = Attendance::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->with('breakTimes')
+                ->firstOrFail();
+
+            $correctionRequestService = app(CorrectionRequestService::class);
+            $correctionRequestService->create($attendance, Auth::user(), $request->all());
 
             return redirect()->route('correction.index')->with('success', '修正申請を送信しました。');
         } catch (\Exception $exception) {

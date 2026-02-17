@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Attendance;
+use App\Models\StampCorrectionRequest;
+use App\Policies\AttendancePolicy;
+use App\Policies\StampCorrectionRequestPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 /**
@@ -17,7 +21,8 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        // 'App\Models\Model' => 'App\Policies\ModelPolicy',
+        Attendance::class => AttendancePolicy::class,
+        StampCorrectionRequest::class => StampCorrectionRequestPolicy::class,
     ];
 
     /**
