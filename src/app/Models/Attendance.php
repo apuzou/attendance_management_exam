@@ -10,7 +10,8 @@ use Carbon\Carbon;
 
 /**
  * 勤怠モデル
- * ユーザーの出勤・退勤情報と休憩時間を管理
+ *
+ * ユーザーの出勤・退勤情報と休憩時間を管理する。
  */
 class Attendance extends Model
 {
@@ -38,7 +39,9 @@ class Attendance extends Model
     ];
 
     /**
-     * ユーザーとのリレーション（多対1）
+     * ユーザーとのリレーション（多対1）を取得する。
+     *
+     * @return BelongsTo
      */
     public function user(): BelongsTo
     {
@@ -46,7 +49,9 @@ class Attendance extends Model
     }
 
     /**
-     * 休憩時間とのリレーション（1対多）
+     * 休憩時間とのリレーション（1対多）を取得する。
+     *
+     * @return HasMany
      */
     public function breakTimes(): HasMany
     {
@@ -54,7 +59,9 @@ class Attendance extends Model
     }
 
     /**
-     * 最終更新者とのリレーション（多対1）
+     * 最終更新者とのリレーション（多対1）を取得する。
+     *
+     * @return BelongsTo
      */
     public function lastModifiedBy(): BelongsTo
     {
@@ -62,7 +69,9 @@ class Attendance extends Model
     }
 
     /**
-     * 修正申請とのリレーション（1対多）
+     * 修正申請とのリレーション（1対多）を取得する。
+     *
+     * @return HasMany
      */
     public function stampCorrectionRequests(): HasMany
     {
@@ -70,8 +79,11 @@ class Attendance extends Model
     }
 
     /**
-     * 合計休憩時間を分単位で取得
-     * 全ての休憩時間の合計を計算
+     * 合計休憩時間を分単位で取得する。
+     *
+     * 全ての休憩時間の合計を計算する。
+     *
+     * @return int 合計休憩時間（分）
      */
     public function getTotalBreakMinutes(): int
     {
@@ -90,7 +102,9 @@ class Attendance extends Model
     }
 
     /**
-     * 合計休憩時間を文字列（H:MM形式）で取得
+     * 合計休憩時間を文字列（H:MM形式）で取得する。
+     *
+     * @return string 合計休憩時間（例: 1:30）
      */
     public function getTotalBreakTime(): string
     {
@@ -102,8 +116,11 @@ class Attendance extends Model
     }
 
     /**
-     * 実働時間を分単位で取得
-     * 出勤時刻と退勤時刻の差から休憩時間を引いた値
+     * 実働時間を分単位で取得する。
+     *
+     * 出勤時刻と退勤時刻の差から休憩時間を引いた値。
+     *
+     * @return int 実働時間（分）
      */
     public function getWorkMinutes(): int
     {
@@ -125,7 +142,9 @@ class Attendance extends Model
     }
 
     /**
-     * 実働時間を文字列（H:MM形式）で取得
+     * 実働時間を文字列（H:MM形式）で取得する。
+     *
+     * @return string 実働時間（例: 8:00）
      */
     public function getWorkTime(): string
     {

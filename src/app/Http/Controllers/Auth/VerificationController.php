@@ -9,14 +9,18 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\VerificationCodeMail;
 
 /**
- * メール認証コントローラー
- * メール認証コードの送信・確認処理を行う
+ * メール認証コントローラ
+ *
+ * メール認証コードの送信・確認処理を行う。
  */
 class VerificationController extends Controller
 {
     /**
-     * メール認証通知画面を表示
-     * 既に認証済みの場合は勤怠画面にリダイレクト
+     * メール認証通知画面を表示する。
+     *
+     * 既に認証済みの場合は勤怠画面にリダイレクトする。
+     *
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
     public function show()
     {
@@ -27,6 +31,13 @@ class VerificationController extends Controller
         return view('auth.verify-email');
     }
 
+    /**
+     * 認証コード入力画面を表示する。
+     *
+     * 未認証の一般ユーザーを認証コード入力画面に誘導する。
+     *
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+     */
     public function showCodeInput()
     {
         if (!Auth::check()) {
@@ -41,8 +52,12 @@ class VerificationController extends Controller
     }
 
     /**
-     * 認証コードを確認してメール認証を完了
-     * 認証コードが正しい場合、email_verified_atを設定
+     * 認証コードを確認してメール認証を完了する。
+     *
+     * 認証コードが正しい場合、email_verified_atを設定する。
+     *
+     * @param VerificationCodeRequest $request 認証コードリクエスト
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function verify(VerificationCodeRequest $request)
     {
@@ -58,8 +73,11 @@ class VerificationController extends Controller
     }
 
     /**
-     * 認証メールを再送信
-     * 新しい認証コードを生成し、メールを送信
+     * 認証メールを再送信する。
+     *
+     * 新しい認証コードを生成し、メールを送信する。
+     *
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function resend()
     {

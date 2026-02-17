@@ -8,17 +8,21 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * 修正申請承認リクエスト
- * 修正申請の承認処理の認可を行う
+ *
+ * 修正申請の承認処理の認可を行う。
  */
 class ApprovalRequest extends FormRequest
 {
     /**
-     * リクエストの認可を判定
+     * リクエストの認可を判定する。
+     *
      * 以下の条件をすべて満たす必要がある:
-     * 1. 管理者であること
-     * 2. 管轄する部門の申請であること（canViewAttendance）
-     * 3. 自身の申請ではないこと
-     * 4. 既に承認済みでないこと
+     * - 管理者であること
+     * - 管轄する部門の申請であること（canViewAttendance）
+     * - 自身の申請ではないこと
+     * - 既に承認済みでないこと
+     *
+     * @return bool 認可される場合true
      */
     public function authorize()
     {
@@ -51,11 +55,21 @@ class ApprovalRequest extends FormRequest
         return true;
     }
 
+    /**
+     * バリデーションルールを取得する。
+     *
+     * @return array<int, mixed>
+     */
     public function rules()
     {
         return [];
     }
 
+    /**
+     * バリデーションエラーメッセージを取得する。
+     *
+     * @return array<int, mixed>
+     */
     public function messages()
     {
         return [];

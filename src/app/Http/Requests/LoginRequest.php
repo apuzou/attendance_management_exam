@@ -6,18 +6,28 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * 一般ユーザーログインリクエスト
- * ログイン処理のバリデーションを行う
+ *
+ * ログイン処理のバリデーションを行う。
  */
 class LoginRequest extends FormRequest
 {
     /**
-     * リクエストの認可を判定（ゲストもログイン可能）
+     * リクエストの認可を判定する。
+     *
+     * ゲストもログイン可能なため常にtrue。
+     *
+     * @return bool
      */
     public function authorize()
     {
         return true;
     }
 
+    /**
+     * バリデーションルールを取得する。
+     *
+     * @return array<string, array<int, string>>
+     */
     public function rules()
     {
         return [
@@ -26,6 +36,11 @@ class LoginRequest extends FormRequest
         ];
     }
 
+    /**
+     * バリデーションエラーメッセージを取得する。
+     *
+     * @return array<string, string>
+     */
     public function messages()
     {
         return [

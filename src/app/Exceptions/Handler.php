@@ -5,6 +5,11 @@ namespace App\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
+/**
+ * 例外ハンドラ
+ *
+ * アプリケーションで発生した例外のレポートとレンダリングを行う。
+ */
 class Handler extends ExceptionHandler
 {
     /**

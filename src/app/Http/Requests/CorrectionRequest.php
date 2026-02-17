@@ -10,7 +10,8 @@ use Carbon\Carbon;
 
 /**
  * 修正申請リクエスト
- * 出勤・退勤時刻や休憩時間の修正申請のバリデーションを行う
+ *
+ * 出勤・退勤時刻や休憩時間の修正申請のバリデーションを行う。
  */
 class CorrectionRequest extends FormRequest
 {
@@ -20,8 +21,11 @@ class CorrectionRequest extends FormRequest
     protected ?bool $isAdmin = null;
 
     /**
-     * 管理者による修正かどうかを判定
-     * 一度判定した結果はプロパティにキャッシュする
+     * 管理者による修正かどうかを判定する。
+     *
+     * 一度判定した結果はプロパティにキャッシュする。
+     *
+     * @return bool 管理者による修正の場合true
      */
     protected function isAdminRequest(): bool
     {
@@ -41,8 +45,11 @@ class CorrectionRequest extends FormRequest
     }
 
     /**
-     * リクエストの認可を判定
-     * 管理者の場合は権限チェック、一般ユーザーの場合は自分の勤怠のみ許可
+     * リクエストの認可を判定する。
+     *
+     * 管理者の場合は権限チェック、一般ユーザーの場合は自分の勤怠のみ許可する。
+     *
+     * @return bool 認可される場合true
      */
     public function authorize()
     {
@@ -61,6 +68,11 @@ class CorrectionRequest extends FormRequest
         return $attendance->user_id === Auth::id();
     }
 
+    /**
+     * バリデーションルールを取得する。
+     *
+     * @return array<string, array<int, string>>
+     */
     public function rules()
     {
         return [
@@ -74,6 +86,11 @@ class CorrectionRequest extends FormRequest
     }
 
 
+    /**
+     * バリデーションエラーメッセージを取得する。
+     *
+     * @return array<string, string>
+     */
     public function messages()
     {
         // 管理者と一般ユーザーで異なるメッセージを返す(テストケースID 11, 13に合わせる)
@@ -120,8 +137,12 @@ class CorrectionRequest extends FormRequest
     }
 
     /**
-     * カスタムバリデーションロジック
-     * 出勤・退勤時刻の整合性、休憩時間の整合性をチェック
+     * カスタムバリデーションロジックを追加する。
+     *
+     * 出勤・退勤時刻の整合性、休憩時間の整合性をチェックする。
+     *
+     * @param \Illuminate\Validation\Validator $validator バリデーター
+     * @return void
      */
     public function withValidator($validator)
     {

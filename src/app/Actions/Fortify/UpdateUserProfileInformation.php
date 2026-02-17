@@ -7,8 +7,20 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
 
+/**
+ * プロフィール情報更新アクション
+ *
+ * Fortifyのプロフィール更新処理で使用される。
+ */
 class UpdateUserProfileInformation implements UpdatesUserProfileInformation
 {
+    /**
+     * ユーザーのプロフィール情報を更新する。
+     *
+     * @param \App\Models\User $user 対象ユーザー
+     * @param array $input 入力データ（name, email）
+     * @return void
+     */
     public function update($user, array $input)
     {
         Validator::make($input, [
@@ -27,6 +39,13 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
         }
     }
 
+    /**
+     * メールアドレス変更時、認証済みユーザーの再認証を促す。
+     *
+     * @param \App\Models\User $user 対象ユーザー
+     * @param array $input 入力データ
+     * @return void
+     */
     protected function updateVerifiedUser($user, array $input)
     {
         $user->forceFill([

@@ -6,15 +6,26 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * 打刻リクエスト
- * 出勤・退勤・休憩開始・休憩終了の打刻処理のバリデーションを行う
+ *
+ * 出勤・退勤・休憩開始・休憩終了の打刻処理のバリデーションを行う。
  */
 class StampRequest extends FormRequest
 {
+    /**
+     * リクエストの認可を判定する。
+     *
+     * @return bool
+     */
     public function authorize()
     {
         return true;
     }
 
+    /**
+     * バリデーションルールを取得する。
+     *
+     * @return array<string, array<int, string>>
+     */
     public function rules()
     {
         return [
@@ -22,6 +33,11 @@ class StampRequest extends FormRequest
         ];
     }
 
+    /**
+     * バリデーションエラーメッセージを取得する。
+     *
+     * @return array<string, string>
+     */
     public function messages()
     {
         return [

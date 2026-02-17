@@ -9,15 +9,26 @@ use Carbon\Carbon;
 
 /**
  * メール認証コードリクエスト
- * メール認証コードの検証処理のバリデーションを行う
+ *
+ * メール認証コードの検証処理のバリデーションを行う。
  */
 class VerificationCodeRequest extends FormRequest
 {
+    /**
+     * リクエストの認可を判定する。
+     *
+     * @return bool
+     */
     public function authorize()
     {
         return true;
     }
 
+    /**
+     * バリデーションルールを取得する。
+     *
+     * @return array<string, array<int, string>>
+     */
     public function rules()
     {
         return [
@@ -25,6 +36,11 @@ class VerificationCodeRequest extends FormRequest
         ];
     }
 
+    /**
+     * バリデーションエラーメッセージを取得する。
+     *
+     * @return array<string, string>
+     */
     public function messages()
     {
         return [
@@ -35,8 +51,12 @@ class VerificationCodeRequest extends FormRequest
     }
 
     /**
-     * カスタムバリデーション
-     * 認証コードの一致確認と有効期限チェックを実行
+     * カスタムバリデーションを追加する。
+     *
+     * 認証コードの一致確認と有効期限チェックを実行する。
+     *
+     * @param \Illuminate\Validation\Validator $validator バリデーター
+     * @return void
      */
     public function withValidator($validator)
     {

@@ -8,14 +8,20 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * メール認証ミドルウェア
- * 一般ユーザーがメール認証を完了していない場合、認証画面にリダイレクト
- * ログアウトとメール認証関連のルートは除外
+ *
+ * 一般ユーザーがメール認証を完了していない場合、認証画面にリダイレクトする。
+ * ログアウトとメール認証関連のルートは除外する。
  */
 class EnsureEmailIsVerified
 {
     /**
-     * リクエストを処理
-     * 一般ユーザーでメール認証が完了していない場合、認証画面にリダイレクト
+     * リクエストを処理する。
+     *
+     * 一般ユーザーでメール認証が完了していない場合、認証画面にリダイレクトする。
+     *
+     * @param Request $request リクエスト
+     * @param \Closure $next 次のミドルウェア
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
     public function handle(Request $request, Closure $next)
     {

@@ -10,7 +10,8 @@ use Laravel\Sanctum\HasApiTokens;
 
 /**
  * ユーザーモデル
- * 一般ユーザーと管理者の両方に対応
+ *
+ * 一般ユーザーと管理者の両方に対応する。
  * role: 'general'（一般ユーザー）または 'admin'（管理者）
  * department_code: 部門コード（1=フルアクセス権限、2以降=部門コード）
  */
@@ -50,23 +51,31 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
-     * 管理者かどうかを判定
+     * 管理者かどうかを判定する。
+     *
+     * @return bool 管理者の場合true
      */
-    public function isAdmin()
+    public function isAdmin(): bool
     {
         return $this->role === 'admin';
     }
 
     /**
-     * 一般ユーザーかどうかを判定
+     * 一般ユーザーかどうかを判定する。
+     *
+     * @return bool 一般ユーザーの場合true
      */
-    public function isGeneral()
+    public function isGeneral(): bool
     {
         return $this->role === 'general';
     }
 
     /**
-     * 全ユーザーの勤怠を参照できる権限を持つか判定（role='admin' && department_code=1）
+     * 全ユーザーの勤怠を参照できる権限を持つか判定する。
+     *
+     * role='admin' かつ department_code=1 の場合にtrue。
+     *
+     * @return bool フルアクセス権限を持つ場合true
      */
     public function hasFullAccess(): bool
     {
@@ -74,7 +83,11 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * 部門単位で勤怠を参照できる権限を持つか判定（role='admin' && department_code!=1）
+     * 部門単位で勤怠を参照できる権限を持つか判定する。
+     *
+     * role='admin' かつ department_code!=1 かつ department_codeがnullでない場合にtrue。
+     *
+     * @return bool 部門アクセス権限を持つ場合true
      */
     public function hasDepartmentAccess(): bool
     {
@@ -82,7 +95,10 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * 指定されたユーザーの勤怠を参照できるかを判定
+     * 指定されたユーザーの勤怠を参照できるかを判定する。
+     *
+     * @param int $targetUserId 対象ユーザーID
+     * @return bool 参照可能な場合true
      */
     public function canViewAttendance(int $targetUserId): bool
     {
@@ -111,8 +127,11 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * 自身の承認ができるかを判定
-     * 部門アクセス権限を持つ管理者は自身の承認ができない
+     * 自身の修正申請を承認できるかを判定する。
+     *
+     * 部門アクセス権限を持つ管理者は自身の承認ができない。
+     *
+     * @return bool 自身の承認が可能な場合true
      */
     public function canApproveOwnRequest(): bool
     {

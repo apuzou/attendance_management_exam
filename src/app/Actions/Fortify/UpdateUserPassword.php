@@ -6,10 +6,22 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
 
+/**
+ * パスワード更新アクション
+ *
+ * Fortifyのプロフィールパスワード更新処理で使用される。
+ */
 class UpdateUserPassword implements UpdatesUserPasswords
 {
     use PasswordValidationRules;
 
+    /**
+     * ユーザーのパスワードを更新する。
+     *
+     * @param \App\Models\User $user 対象ユーザー
+     * @param array $input 入力データ（current_password, password, password_confirmation）
+     * @return void
+     */
     public function update($user, array $input)
     {
         Validator::make($input, [

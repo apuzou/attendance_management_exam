@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * 休憩時間モデル
- * 勤怠レコードに紐づく休憩時間を管理
+ *
+ * 勤怠レコードに紐づく休憩時間を管理する。
  */
 class BreakTime extends Model
 {
@@ -24,7 +25,9 @@ class BreakTime extends Model
     ];
 
     /**
-     * 勤怠とのリレーション（多対1）
+     * 勤怠とのリレーション（多対1）を取得する。
+     *
+     * @return BelongsTo
      */
     public function attendance(): BelongsTo
     {

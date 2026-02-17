@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Hash;
 
 /**
  * 認証サービス
- * Fortifyとカスタムコントローラーで共通して使用する認証ロジック
+ *
+ * Fortifyとカスタムコントローラーで共通して使用する認証ロジックを提供する。
  */
 class AuthenticationService
 {

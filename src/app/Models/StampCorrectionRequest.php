@@ -9,9 +9,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * 打刻修正申請モデル
- * 出勤・退勤時刻の修正申請を管理
- * original_*: 修正前の値（証跡として保存）
- * corrected_*: 修正後の値
+ *
+ * 出勤・退勤時刻の修正申請を管理する。
+ * - original_*: 修正前の値（証跡として保存）
+ * - corrected_*: 修正後の値
  */
 class StampCorrectionRequest extends Model
 {
@@ -42,7 +43,9 @@ class StampCorrectionRequest extends Model
     ];
 
     /**
-     * 勤怠とのリレーション（多対1）
+     * 勤怠とのリレーション（多対1）を取得する。
+     *
+     * @return BelongsTo
      */
     public function attendance(): BelongsTo
     {
@@ -50,7 +53,9 @@ class StampCorrectionRequest extends Model
     }
 
     /**
-     * 申請者（ユーザー）とのリレーション（多対1）
+     * 申請者（ユーザー）とのリレーション（多対1）を取得する。
+     *
+     * @return BelongsTo
      */
     public function user(): BelongsTo
     {
@@ -58,7 +63,9 @@ class StampCorrectionRequest extends Model
     }
 
     /**
-     * 承認者（ユーザー）とのリレーション（多対1）
+     * 承認者（ユーザー）とのリレーション（多対1）を取得する。
+     *
+     * @return BelongsTo
      */
     public function approvedBy(): BelongsTo
     {
@@ -66,7 +73,9 @@ class StampCorrectionRequest extends Model
     }
 
     /**
-     * 休憩時間修正申請とのリレーション（1対多）
+     * 休憩時間修正申請とのリレーション（1対多）を取得する。
+     *
+     * @return HasMany
      */
     public function breakCorrectionRequests(): HasMany
     {
@@ -74,7 +83,9 @@ class StampCorrectionRequest extends Model
     }
 
     /**
-     * 承認済みかどうかを判定
+     * 承認済みかどうかを判定する。
+     *
+     * @return bool 承認済みの場合true
      */
     public function isApproved(): bool
     {
@@ -82,7 +93,9 @@ class StampCorrectionRequest extends Model
     }
 
     /**
-     * 承認待ちかどうかを判定
+     * 承認待ちかどうかを判定する。
+     *
+     * @return bool 承認待ちの場合true
      */
     public function isPending(): bool
     {

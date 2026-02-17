@@ -10,13 +10,21 @@ use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController as FortifyAu
 use Laravel\Fortify\Http\Requests\LoginRequest as FortifyLoginRequest;
 
 /**
- * 認証セッションコントローラー
+ * 認証セッションコントローラ
+ *
+ * Fortifyの認証セッションコントローラを継承し、カスタムバリデーションと
+ * 管理者/一般ユーザーのリダイレクト先を制御する。
  */
 class AuthenticatedSessionController extends FortifyAuthenticatedSessionController
 {
     /**
-     * ログイン処理
-     * LoginRequestを使用してバリデーションを実行後、Fortifyの標準処理を実行
+     * ログイン処理を行う。
+     *
+     * LoginRequestを使用してバリデーションを実行後、Fortifyの標準処理を実行する。
+     * バリデーションエラー時は管理者ログイン/一般ログインに応じてリダイレクト先を分岐する。
+     *
+     * @param Request $request HTTPリクエスト
+     * @return mixed
      */
     public function store(Request $request)
     {

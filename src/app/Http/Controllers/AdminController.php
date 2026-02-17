@@ -13,11 +13,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Carbon\Carbon;
 
+/**
+ * 管理者コントローラ
+ *
+ * 勤怠一覧・詳細、勤怠修正、スタッフ一覧、月次勤怠の閲覧・CSV出力を処理する。
+ */
 class AdminController extends Controller
 {
     /**
      * コンストラクタ
-     * 管理者権限チェックのミドルウェアを適用
+     *
+     * 管理者権限チェックのミドルウェアを適用する。
      */
     public function __construct()
     {
@@ -30,8 +36,12 @@ class AdminController extends Controller
     }
 
     /**
-     * 管理者の勤怠一覧画面を表示
-     * 指定日の出勤者一覧を表示（権限に応じてフィルタリング）
+     * 管理者の勤怠一覧画面を表示する。
+     *
+     * 指定日の出勤者一覧を表示する。権限に応じてフィルタリングする。
+     *
+     * @param Request $request HTTPリクエスト（date, calendar_monthパラメータ）
+     * @return \Illuminate\View\View
      */
     public function index(Request $request)
     {
@@ -80,8 +90,12 @@ class AdminController extends Controller
     }
 
     /**
-     * 管理者の勤怠詳細画面を表示
-     * 指定された勤怠情報を取得し、承認待ちの修正申請があるかチェックして編集可否を判定
+     * 管理者の勤怠詳細画面を表示する。
+     *
+     * 指定された勤怠情報を取得し、承認待ちの修正申請があるかチェックして編集可否を判定する。
+     *
+     * @param int $id 勤怠ID
+     * @return \Illuminate\View\View|\Illuminate\Http\Response
      */
     public function show($id)
     {
@@ -114,10 +128,15 @@ class AdminController extends Controller
     }
 
     /**
-     * 管理者による勤怠情報の直接修正
-     * フルアクセス権限の管理者は自身の勤怠も直接修正可能
-     * 部門アクセス権限の管理者が自身の勤怠を修正する場合は申請として扱う
-     * 認可チェックはCorrectionRequestのauthorize()で行われる
+     * 管理者による勤怠情報の直接修正を行う。
+     *
+     * フルアクセス権限の管理者は自身の勤怠も直接修正可能。
+     * 部門アクセス権限の管理者が自身の勤怠を修正する場合は申請として扱う。
+     * 認可チェックはCorrectionRequestのauthorize()で行われる。
+     *
+     * @param CorrectionRequest $request 修正申請リクエスト
+     * @param int $id 勤怠ID
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(CorrectionRequest $request, $id)
     {
@@ -203,7 +222,11 @@ class AdminController extends Controller
     }
 
     /**
-     * 部門アクセス権限の管理者が自身の勤怠を修正する場合には申請として作成する
+     * 部門アクセス権限の管理者が自身の勤怠を修正する場合に申請として作成する。
+     *
+     * @param CorrectionRequest $request 修正申請リクエスト
+     * @param Attendance $attendance 勤怠レコード
+     * @return \Illuminate\Http\RedirectResponse
      */
     private function createCorrectionRequest(CorrectionRequest $request, Attendance $attendance)
     {
@@ -218,8 +241,11 @@ class AdminController extends Controller
     }
 
     /**
-     * 管理者のスタッフ一覧画面を表示
-     * 権限に応じて管轄するスタッフの一覧を表示
+     * 管理者のスタッフ一覧画面を表示する。
+     *
+     * 権限に応じて管轄するスタッフの一覧を表示する。
+     *
+     * @return \Illuminate\View\View
      */
     public function staff()
     {
@@ -243,7 +269,13 @@ class AdminController extends Controller
     }
 
     /**
-     * 管理者のスタッフ別月次勤怠一覧画面を表示
+     * 管理者のスタッフ別月次勤怠一覧画面を表示する。
+     *
+     * download=csv の場合はCSV出力を行う。
+     *
+     * @param Request $request HTTPリクエスト（month, downloadパラメータ）
+     * @param int $id 対象ユーザーID
+     * @return \Illuminate\View\View|\Illuminate\Http\Response
      */
     public function list(Request $request, $id)
     {

@@ -4,6 +4,11 @@ namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
+/**
+ * 認可サービスプロバイダ
+ *
+ * ポリシーマッピングと認可サービスの登録を行う。
+ */
 class AuthServiceProvider extends ServiceProvider
 {
     /**

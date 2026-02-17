@@ -6,15 +6,26 @@ use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * ユーザー登録リクエスト
- * 新規ユーザー登録処理のバリデーションを行う
+ *
+ * 新規ユーザー登録処理のバリデーションを行う。
  */
 class RegisterRequest extends FormRequest
 {
+    /**
+     * リクエストの認可を判定する。
+     *
+     * @return bool
+     */
     public function authorize()
     {
         return true;
     }
 
+    /**
+     * バリデーションルールを取得する。
+     *
+     * @return array<string, array<int, string>>
+     */
     public function rules()
     {
         return [
@@ -24,6 +35,11 @@ class RegisterRequest extends FormRequest
         ];
     }
 
+    /**
+     * バリデーションエラーメッセージを取得する。
+     *
+     * @return array<string, string>
+     */
     public function messages()
     {
         return [

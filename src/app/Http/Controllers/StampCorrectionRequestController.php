@@ -15,10 +15,20 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
+/**
+ * 打刻修正申請コントローラ
+ *
+ * 修正申請の作成、一覧表示、承認画面表示、承認処理を行う。
+ */
 class StampCorrectionRequestController extends Controller
 {
     /**
-     * 修正申請を作成
+     * 修正申請を作成する。
+     *
+     * @param CorrectionRequest $request 修正申請リクエスト
+     * @param int $id 勤怠ID
+     * @return \App\Models\StampCorrectionRequest
+     * @throws \Exception 作成失敗時
      */
     public function store(CorrectionRequest $request, $id)
     {
@@ -97,9 +107,13 @@ class StampCorrectionRequestController extends Controller
     }
 
     /**
-     * 申請一覧画面を表示
-     * 管理者の場合は管轄する部門の申請を表示
-     * 一般ユーザーの場合は自分の申請のみ表示
+     * 申請一覧画面を表示する。
+     *
+     * 管理者の場合は管轄する部門の申請を表示する。
+     * 一般ユーザーの場合は自分の申請のみ表示する。
+     *
+     * @param Request $request HTTPリクエスト（tabパラメータ）
+     * @return \Illuminate\View\View
      */
     public function index(Request $request)
     {
@@ -163,7 +177,10 @@ class StampCorrectionRequestController extends Controller
     }
 
     /**
-     * 修正申請承認画面を表示
+     * 修正申請承認画面を表示する。
+     *
+     * @param int $attendanceCorrectRequestId 打刻修正申請ID
+     * @return \Illuminate\View\View|\Illuminate\Http\Response
      */
     public function show($attendanceCorrectRequestId)
     {
@@ -195,7 +212,11 @@ class StampCorrectionRequestController extends Controller
     }
 
     /**
-     * 修正申請を承認
+     * 修正申請を承認する。
+     *
+     * @param ApprovalRequest $request 承認リクエスト
+     * @param int $attendanceCorrectRequestId 打刻修正申請ID
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(ApprovalRequest $request, $attendanceCorrectRequestId)
     {

@@ -18,8 +18,18 @@ use Laravel\Fortify\Contracts\LogoutResponse;
 use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Fortify;
 
+/**
+ * Fortifyサービスプロバイダ
+ *
+ * Laravel Fortify（認証）の設定、ビュー、認証ロジック、レスポンスのカスタマイズを行う。
+ */
 class FortifyServiceProvider extends ServiceProvider
 {
+    /**
+     * サービスを登録する。
+     *
+     * @return void
+     */
     public function register()
     {
         $this->app->bind(
@@ -28,6 +38,11 @@ class FortifyServiceProvider extends ServiceProvider
         );
     }
 
+    /**
+     * Fortifyのブートストラップ処理を行う。
+     *
+     * @return void
+     */
     public function boot()
     {
         Fortify::createUsersUsing(CreateNewUser::class);

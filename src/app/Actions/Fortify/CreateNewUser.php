@@ -10,13 +10,20 @@ use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 use App\Mail\VerificationCodeMail;
 
+/**
+ * 新規ユーザー作成アクション
+ *
+ * Fortifyのユーザー登録処理で使用される。一般ユーザーとして作成し、
+ * メール認証コードを送信する。
+ */
 class CreateNewUser implements CreatesNewUsers
 {
     /**
-     * 新規ユーザーを作成
-     * バリデーションはRegisterRequestフォームリクエストのルールとメッセージを使用
-     * 
-     * @param array $input 入力データ
+     * 新規ユーザーを作成する。
+     *
+     * バリデーションはRegisterRequestフォームリクエストのルールとメッセージを使用する。
+     *
+     * @param array $input 入力データ（name, email, password）
      * @return User 作成されたユーザー
      */
     public function create(array $input): User

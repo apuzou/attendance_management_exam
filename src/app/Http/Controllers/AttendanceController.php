@@ -14,11 +14,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
+/**
+ * 勤怠コントローラ
+ *
+ * 打刻、勤怠一覧・詳細、修正申請の提出を処理する。
+ */
 class AttendanceController extends Controller
 {
     /**
-     * 勤怠打刻画面を表示
-     * 当日の勤怠情報を取得し、打刻可能な状態を判定して表示
+     * 勤怠打刻画面を表示する。
+     *
+     * 当日の勤怠情報を取得し、打刻可能な状態を判定して表示する。
+     *
+     * @return \Illuminate\View\View
      */
     public function index()
     {
@@ -42,8 +50,12 @@ class AttendanceController extends Controller
     }
 
     /**
-     * 打刻処理を実行
-     * 出勤/退勤/休憩開始/休憩終了の各打刻を処理し、状態遷移の整合性をチェック
+     * 打刻処理を実行する。
+     *
+     * 出勤/退勤/休憩開始/休憩終了の各打刻を処理し、状態遷移の整合性をチェックする。
+     *
+     * @param StampRequest $request 打刻リクエスト
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(StampRequest $request)
     {
@@ -136,8 +148,12 @@ class AttendanceController extends Controller
     }
 
     /**
-     * 現在の勤怠状態を取得
-     * 勤務外/出勤中/休憩中/退勤済のいずれかを返す
+     * 現在の勤怠状態を取得する。
+     *
+     * 勤務外/出勤中/休憩中/退勤済のいずれかを返す。
+     *
+     * @param \App\Models\Attendance|null $attendance 勤怠レコード
+     * @return string 状態（勤務外/出勤中/休憩中/退勤済）
      */
     private function getStatus($attendance): string
     {
@@ -167,7 +183,12 @@ class AttendanceController extends Controller
     }
 
     /**
-     * 勤怠一覧画面を表示
+     * 勤怠一覧画面を表示する。
+     *
+     * 指定月の勤怠情報を取得して表示する。
+     *
+     * @param Request $request HTTPリクエスト（monthパラメータで月を指定）
+     * @return \Illuminate\View\View
      */
     public function list(Request $request)
     {
@@ -194,8 +215,12 @@ class AttendanceController extends Controller
     }
 
     /**
-     * 勤怠詳細画面を表示
-     * 指定された勤怠情報を取得し、承認待ちの修正申請があるかチェック
+     * 勤怠詳細画面を表示する。
+     *
+     * 指定された勤怠情報を取得し、承認待ちの修正申請があるかチェックする。
+     *
+     * @param int $id 勤怠ID
+     * @return \Illuminate\View\View|\Illuminate\Http\Response
      */
     public function show($id)
     {
@@ -221,7 +246,11 @@ class AttendanceController extends Controller
     }
 
     /**
-     * 出勤・退勤時刻や休憩時間の修正申請を提出
+     * 出勤・退勤時刻や休憩時間の修正申請を提出する。
+     *
+     * @param CorrectionRequest $request 修正申請リクエスト
+     * @param int $id 勤怠ID
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(CorrectionRequest $request, $id)
     {

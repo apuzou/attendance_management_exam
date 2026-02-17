@@ -7,14 +7,22 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * 認証済みリダイレクトミドルウェア
+ *
+ * 既に認証済みのユーザーがログイン/登録画面にアクセスした場合、
+ * 役割に応じた適切な画面へリダイレクトする。
+ */
 class RedirectIfAuthenticated
 {
     /**
-     * Handle an incoming request.
+     * リクエストを処理する。
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @param  string|null  ...$guards
+     * 認証済みの場合、役割（一般ユーザー/管理者）に応じた画面へリダイレクトする。
+     *
+     * @param Request $request リクエスト
+     * @param \Closure $next 次のミドルウェア
+     * @param string|null ...$guards ガード名
      * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
     public function handle(Request $request, Closure $next, ...$guards)
